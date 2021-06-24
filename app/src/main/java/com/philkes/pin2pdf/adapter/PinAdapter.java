@@ -1,11 +1,15 @@
 package com.philkes.pin2pdf.adapter;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.philkes.pin2pdf.R;
@@ -14,6 +18,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
     private List<Pin> pins;
@@ -46,21 +51,44 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
      * (custom ViewHolder).
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        private static final int IMG_SIZE=50;
         private final TextView titleView;
         private final ImageView imgView;
 
+        private final Context context;
+
+
+        boolean isImageFitToScreen=false;
+
         public ViewHolder(View view) {
             super(view);
+            this.context=view.getContext();
             // Define click listener for the ViewHolder's View
             titleView=view.findViewById(R.id.pin_title);
             imgView=view.findViewById(R.id.pin_img);
+            // TODO On image click show Fullscreen Image
+           /* imgView.setOnClickListener((v)->{
+                    if(isImageFitToScreen) {
+                        isImageFitToScreen=false;
+                        imgView.setLayoutParams(new LinearLayout.LayoutParams(IMG_SIZE, IMG_SIZE));
+                        imgView.setAdjustViewBounds(true);
+                    }else{
+                        isImageFitToScreen=true;
+                        imgView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                        imgView.setScaleType(ImageView.ScaleType.FIT_XY);
+                    }
+
+            });*/
         }
 
-        public void updateData(Pin pin){
+        public void updateData(Pin pin) {
             titleView.setText(pin.getTitle());
-            Picasso pic=Picasso.get();
-            pic.setLoggingEnabled(true);
-            pic.load(pin.getImgUrl()).into(imgView);
+            titleView.setOnClickListener(view1 -> {
+                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(pin.getLink()));
+                context.startActivity(browserIntent);
+            });
+            Picasso.get().load(pin.getImgUrl()).into(imgView);
+
         }
     }
 

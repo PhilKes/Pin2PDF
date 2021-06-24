@@ -16,6 +16,7 @@
         app:siBorderWidth="1dp"
         app:siBorderColor="#000"
         app:siSquare="true"
+        android:adjustViewBounds="true"
         android:scaleType="centerCrop"
         />
 

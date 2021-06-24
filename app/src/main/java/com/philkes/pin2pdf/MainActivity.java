@@ -27,6 +27,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setupUI();
+        loadPins();
+    }
+
+    private void setupUI() {
         pinsList=new ArrayList<>();
         pinListView= findViewById(R.id.pins_list);
         pinListViewAdapter= new PinAdapter(pinsList);
@@ -37,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(pinListView.getContext(),
                 listViewManager.getOrientation());
         pinListView.addItemDecoration(dividerItemDecoration);
-        // Set layout manager to position the items
-        loadPins();
     }
 
     private void loadPins() {
