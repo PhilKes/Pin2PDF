@@ -2,6 +2,8 @@ package com.philkes.pin2pdf;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
@@ -29,8 +31,13 @@ public class MainActivity extends AppCompatActivity {
         pinListView= findViewById(R.id.pins_list);
         pinListViewAdapter= new PinAdapter(pinsList);
         pinListView.setAdapter(pinListViewAdapter);
+        pinListView.setItemAnimator(new DefaultItemAnimator());
+        LinearLayoutManager listViewManager=new LinearLayoutManager(this);
+        pinListView.setLayoutManager(listViewManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(pinListView.getContext(),
+                listViewManager.getOrientation());
+        pinListView.addItemDecoration(dividerItemDecoration);
         // Set layout manager to position the items
-        pinListView.setLayoutManager(new LinearLayoutManager(this));
         loadPins();
     }
 

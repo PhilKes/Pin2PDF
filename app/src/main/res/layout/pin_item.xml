@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        android:orientation="horizontal"
+<LinearLayout android:orientation="horizontal"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent" android:layout_height="wrap_content">
-<ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<com.github.siyamed.shapeimageview.RoundedImageView
         android:id="@+id/pin_img"
         android:layout_width="50pt"
         android:layout_height="50pt"
         android:src="@drawable/example_pin_img"
+        app:siRadius="6dp"
+        app:siBorderWidth="1dp"
+        app:siBorderColor="#000"
+        app:siSquare="true"
         android:scaleType="centerCrop"
         />
 
-    <TextView
-            android:id="@+id/pin_title"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Djuvec Reis eine köstliche Reis Beilage - Zu Faul Zum Kochen?"
-            android:textAlignment="center"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+<TextView
+        android:id="@+id/pin_title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Djuvec Reis eine köstliche Reis Beilage - Zu Faul Zum Kochen?"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 </LinearLayout>
