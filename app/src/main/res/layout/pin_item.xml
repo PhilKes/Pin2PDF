@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        android:orientation="horizontal"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+<ImageView
+        android:id="@+id/pin_img"
+        android:layout_width="50pt"
+        android:layout_height="50pt"
+        android:src="@drawable/example_pin_img"
+        android:scaleType="centerCrop"
+        />
+
+    <TextView
+            android:id="@+id/pin_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Djuvec Reis eine köstliche Reis Beilage - Zu Faul Zum Kochen?"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+</LinearLayout>

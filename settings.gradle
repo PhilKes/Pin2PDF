@@ -1,0 +1,2 @@
+rootProject.name='Pin2PDF'
+include ':app'
