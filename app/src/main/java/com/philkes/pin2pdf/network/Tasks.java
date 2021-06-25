@@ -49,16 +49,16 @@ public class Tasks {
                     }
                     String link=pinAHref.attr("href");
                     String imgUrl=pinAHref.select("img").attr("src");
-                    Pin pin=new Pin(title, imgUrl, link);
+                    Pin pin=new Pin(title, imgUrl, link,"Test");
                     pins.add(pin);
                     String pinLink=pin.getLink();
                     doc=Jsoup.connect(pinLink)
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
                             .get();
-                    Element domainHover=doc.selectFirst("[href]");
-                    //String recipeLink=domainHover.selectFirst("a[href]").attr("href");
-                    //pin.setLink(recipeLink);
-                    System.out.println();
+                    System.out.println(doc.toString());
+                    Element domainHover=doc.selectFirst(".imageDomainLinkHover");
+                    String recipeLink=domainHover.selectFirst("a[href]").attr("href");
+                    pin.setLink(recipeLink);
 
                 }
 

@@ -15,11 +15,13 @@ import android.view.MenuItem;
 import com.philkes.pin2pdf.adapter.PinAdapter;
 import com.philkes.pin2pdf.mock.MockData;
 import com.philkes.pin2pdf.model.Pin;
+import com.philkes.pin2pdf.network.PinterestAPI;
 import com.philkes.pin2pdf.network.Tasks;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,35 +40,39 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupUI() {
         pinsList=new ArrayList<>();
-        pinListView= findViewById(R.id.pins_list);
-        pinListViewAdapter= new PinAdapter(pinsList);
+        pinListView=findViewById(R.id.pins_list);
+        pinListViewAdapter=new PinAdapter(pinsList);
         pinListView.setAdapter(pinListViewAdapter);
         pinListView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager listViewManager=new LinearLayoutManager(this);
         pinListView.setLayoutManager(listViewManager);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(pinListView.getContext(),
+        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(pinListView.getContext(),
                 listViewManager.getOrientation());
         pinListView.addItemDecoration(dividerItemDecoration);
     }
 
     private void loadPins() {
-        pinsList.clear();
-        try {
-            pinsList.addAll(new Tasks.GetPinsTask().execute("https://www.pinterest.de/cryster0416/beilagen/").get());
-            pinListViewAdapter.notifyDataSetChanged();
-        }
-        catch(ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
+
+        // pinsList.addAll(new Tasks.GetPinsTask().execute("https://www.pinterest.de/cryster0416/beilagen/").get());
+        PinterestAPI.requestPinsOfUser(this, "cryster0416",(pins)->{
+            pinsList.clear();
+            pinsList.addAll(pins.values().stream()
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList()));
+            runOnUiThread(()->{
+                pinListViewAdapter.notifyDataSetChanged();
+            });
+        });
+
     }
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+        MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.search_bar, menu);
-        MenuItem searchViewItem = menu.findItem(R.id.app_bar_search);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchViewItem);
+        MenuItem searchViewItem=menu.findItem(R.id.app_bar_search);
+        final SearchView searchView=(SearchView) MenuItemCompat.getActionView(searchViewItem);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
