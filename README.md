@@ -1,4 +1,4 @@
-# Pin2PDF
+# Pin2PDF <img src="/assets/pin2pdf_logo.png" height="50"> 
 
 * Show Pinterest Boards of your Account
 * Quick Links to .pdf/print Sites
