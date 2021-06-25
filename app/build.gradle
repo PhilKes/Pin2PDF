@@ -39,5 +39,7 @@ dependencies {
 
     implementation 'com.squareup.picasso:picasso:2.71828'
     compile 'com.github.siyamed:android-shape-imageview:0.9.+@aar'
+    // jsoup HTML parser library @ https://jsoup.org/
+    implementation 'org.jsoup:jsoup:1.13.1'
 
 }
