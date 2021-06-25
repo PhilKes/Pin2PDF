@@ -39,13 +39,12 @@ public class PinterestAPI {
                     @Override
                     public void onResponse(String response) {
                         HashMap<String, List<Pin>> pins=new HashMap<>();
-                        System.out.println(response);
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
                         Set<String> boardNames=responseObj.getBoardPins().keySet();
                         Integer requestCount=boardNames.size();
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
                         for(String boardName : boardNames) {
-                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown);
+                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown,null);
                         }
                         new Thread(() -> {
                             try {
@@ -68,7 +67,9 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
-    public static void requestPinsOfBoard(Context context, RequestQueue queue, String user, String boardName, HashMap<String, List<Pin>> pins, CountDownLatch requestCountDown) {
+    public static void requestPinsOfBoard(Context context, RequestQueue queue, String user, String boardName,
+                                          Map<String, List<Pin>> pins, CountDownLatch requestCountDown,
+                                          Consumer<Map<String, List<Pin>>> consumer) {
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
@@ -86,7 +87,12 @@ public class PinterestAPI {
                             try {
                                 requestCountDown2.await();
                                 pins.put(boardName, boardPins);
-                                requestCountDown.countDown();
+                                if(requestCountDown!=null) {
+                                    requestCountDown.countDown();
+                                }
+                                if(consumer!=null) {
+                                    consumer.accept(pins);
+                                }
                             }
                             catch(InterruptedException e) {
                                 e.printStackTrace();
@@ -113,7 +119,6 @@ public class PinterestAPI {
                     public void onResponse(String response) {
                         PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
                         for(int i=0; i<boardPins.size(); i++) {
-                            System.out.println(boardPins.get(i).getId());
                             RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
                             String title=boardPins.get(i).getTitle();
                             if(metaData!=null && metaData.getArticle()!=null) {

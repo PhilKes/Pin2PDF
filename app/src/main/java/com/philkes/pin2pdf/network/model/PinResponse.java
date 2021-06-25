@@ -59,10 +59,7 @@ public class PinResponse {
     }
 
     public String getBoardName() {
-        if(board==null) {
-            System.out.println();
-        }
-        return board.getName();
+        return board!=null ? board.getName() : null;
     }
 
     public Pin toPin() {

@@ -1,0 +1,87 @@
+package com.philkes.pin2pdf.fragment;
+
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.philkes.pin2pdf.R;
+import com.philkes.pin2pdf.network.PinterestAPI;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.philkes.pin2pdf.fragment.BoardObjectFragment.ARG_BOARD;
+
+public class BoardFragment extends Fragment {
+    public static final String USER="cryster0416";
+    // When requested, this adapter returns a DemoObjectFragment,
+    // representing an object in the collection.
+    BoardPagerAdapter demoCollectionPagerAdapter;
+    ViewPager viewPager;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.board_main_fragment, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        PinterestAPI.requestPinsOfUser(getContext(), USER, (pins) -> {
+            List<String> boards=pins.keySet().stream().collect(Collectors.toList());
+            getActivity().runOnUiThread(() -> {
+                demoCollectionPagerAdapter=new BoardPagerAdapter(getChildFragmentManager(),
+                        boards);
+                viewPager=view.findViewById(R.id.boardPager);
+                viewPager.setAdapter(demoCollectionPagerAdapter);
+                TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+                tabLayout.setupWithViewPager(viewPager);
+            });
+
+        });
+    }
+
+
+}
+
+// Since this is an object collection, use a FragmentStatePagerAdapter,
+// and NOT a FragmentPagerAdapter.
+class BoardPagerAdapter extends FragmentStatePagerAdapter {
+    List<String> boards;
+
+    public BoardPagerAdapter(FragmentManager fm, List<String> boards) {
+        super(fm);
+        this.boards=boards;
+    }
+
+    @Override
+    public Fragment getItem(int i) {
+        Fragment fragment=new BoardObjectFragment();
+        Bundle args=new Bundle();
+        // Our object is just an integer :-P
+        args.putString(ARG_BOARD, boards.get(i));
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public int getCount() {
+        return boards.size();
+    }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return boards.get(position);
+    }
+}
+

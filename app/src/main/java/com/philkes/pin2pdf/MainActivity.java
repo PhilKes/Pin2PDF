@@ -1,69 +1,23 @@
 package com.philkes.pin2pdf;
 
+import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.philkes.pin2pdf.adapter.PinAdapter;
-import com.philkes.pin2pdf.mock.MockData;
-import com.philkes.pin2pdf.model.Pin;
-import com.philkes.pin2pdf.network.PinterestAPI;
-import com.philkes.pin2pdf.network.Tasks;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-
 public class MainActivity extends AppCompatActivity {
 
-    private RecyclerView pinListView;
-    private RecyclerView.Adapter pinListViewAdapter;
-    private List<Pin> pinsList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        setupUI();
-        loadPins();
-    }
-
-    private void setupUI() {
-        pinsList=new ArrayList<>();
-        pinListView=findViewById(R.id.pins_list);
-        pinListViewAdapter=new PinAdapter(pinsList);
-        pinListView.setAdapter(pinListViewAdapter);
-        pinListView.setItemAnimator(new DefaultItemAnimator());
-        LinearLayoutManager listViewManager=new LinearLayoutManager(this);
-        pinListView.setLayoutManager(listViewManager);
-        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(pinListView.getContext(),
-                listViewManager.getOrientation());
-        pinListView.addItemDecoration(dividerItemDecoration);
-    }
-
-    private void loadPins() {
-
-        // pinsList.addAll(new Tasks.GetPinsTask().execute("https://www.pinterest.de/cryster0416/beilagen/").get());
-        PinterestAPI.requestPinsOfUser(this, "cryster0416",(pins)->{
-            pinsList.clear();
-            pinsList.addAll(pins.values().stream()
-                    .flatMap(List::stream)
-                    .collect(Collectors.toList()));
-            runOnUiThread(()->{
-                pinListViewAdapter.notifyDataSetChanged();
-            });
-        });
-
+        //setupUI();
+       // loadPins();
     }
 
 
