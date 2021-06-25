@@ -12,15 +12,16 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.philkes.pin2pdf.model.Pin;
+import com.philkes.pin2pdf.network.model.PinsInfosResponse;
+import com.philkes.pin2pdf.network.model.RichMetaData;
 import com.philkes.pin2pdf.network.model.UserPinsResponse;
-import com.philkes.pin2pdf.network.model.UserPinsResponseData;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 public class PinterestAPI {
     private static final String PIN_BASE_URL="https://widgets.pinterest.com/v3/pidgets/";
@@ -42,18 +43,19 @@ public class PinterestAPI {
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
                         Set<String> boardNames=responseObj.getBoardPins().keySet();
                         Integer requestCount=boardNames.size();
-                        CountDownLatch requestCountDown = new CountDownLatch(requestCount);
-                        for(String boardName :boardNames) {
-                            requestPinsOfBoard(queue, user, boardName, pins,requestCountDown);
+                        CountDownLatch requestCountDown=new CountDownLatch(requestCount);
+                        for(String boardName : boardNames) {
+                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown);
                         }
-                        new Thread(()->{
-                        try {
-                            requestCountDown.await();
-                            onSuccess.accept(pins);
-                        }
-                        catch(InterruptedException e) {
-                            e.printStackTrace();
-                        }}).start();
+                        new Thread(() -> {
+                            try {
+                                requestCountDown.await();
+                                onSuccess.accept(pins);
+                            }
+                            catch(InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -66,7 +68,7 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
-    public static void requestPinsOfBoard(RequestQueue queue, String user, String boardName, HashMap<String, List<Pin>> pins,CountDownLatch requestCountDown ) {
+    public static void requestPinsOfBoard(Context context, RequestQueue queue, String user, String boardName, HashMap<String, List<Pin>> pins, CountDownLatch requestCountDown) {
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
@@ -74,10 +76,22 @@ public class PinterestAPI {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        System.out.println(response);
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                        pins.put(boardName,responseObj.getBoardPins(boardName));
-                        requestCountDown.countDown();
+                        List<Pin> boardPins=responseObj.getBoardPins(boardName);
+                        Integer requestCount=1;
+                        CountDownLatch requestCountDown2=new CountDownLatch(requestCount);
+                        RequestQueue queue2=Volley.newRequestQueue(context);
+                        requestPinsInfos(queue2, requestCountDown2, boardPins);
+                        new Thread(() -> {
+                            try {
+                                requestCountDown2.await();
+                                pins.put(boardName, boardPins);
+                                requestCountDown.countDown();
+                            }
+                            catch(InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -87,6 +101,37 @@ public class PinterestAPI {
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
+    }
+
+    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<Pin> boardPins) {
+        String idsStr=boardPins.stream().map(Pin::getId).collect(Collectors.joining(","));
+        String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
+        // Request a string response from the provided URL.
+        StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
+                        for(int i=0; i<boardPins.size(); i++) {
+                            System.out.println(boardPins.get(i).getId());
+                            RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
+                            String title=boardPins.get(i).getTitle();
+                            if(metaData!=null && metaData.getArticle()!=null) {
+                                title=metaData.getArticle().getName();
+                            }
+                            boardPins.get(i).setTitle(title);
+                        }
+                        requestCountDown2.countDown();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "nErrorResponse: Failed");
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue2.add(stringRequest);
+
     }
 
 }

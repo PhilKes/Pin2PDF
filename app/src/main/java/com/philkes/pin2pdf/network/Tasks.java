@@ -49,7 +49,7 @@ public class Tasks {
                     }
                     String link=pinAHref.attr("href");
                     String imgUrl=pinAHref.select("img").attr("src");
-                    Pin pin=new Pin(title, imgUrl, link,"Test");
+                    Pin pin=new Pin(title, imgUrl, link,"Test","");
                     pins.add(pin);
                     String pinLink=pin.getLink();
                     doc=Jsoup.connect(pinLink)
