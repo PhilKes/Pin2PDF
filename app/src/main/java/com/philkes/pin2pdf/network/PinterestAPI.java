@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import static com.philkes.pin2pdf.Util.getUrlDomainName;
+
 public class PinterestAPI {
     private static final String PIN_BASE_URL="https://widgets.pinterest.com/v3/pidgets/";
     private static final String TAG="PinterestAPI";
@@ -132,8 +134,10 @@ public class PinterestAPI {
                     Document doc=Jsoup.connect(pin.getLink())
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
                             .get();
+                    // Get all Links (<a>)
                     Elements pinsHrefs=doc
                             .select("a[href]");
+                    // Find Link with Text containing "Print" or "Drucken"
                     Element pinHref=pinsHrefs
                             .select(":contains(Print)").first();
                     if(pinHref==null) {
@@ -142,8 +146,18 @@ public class PinterestAPI {
                     }
                     if(pinHref!=null) {
                         String pdfLink=pinHref.attr("href");
-                        System.out.println("PDFLink: " + pdfLink);
-                        pin.setPdfLink(pdfLink);
+                        // Check if found Link is actual link (not e.g. javascript code)
+                        boolean skipped=pdfLink.equals("#") || pdfLink.contains("javascript") || pdfLink.contains("()");
+                        System.out.println(skipped ? "PDFLink Skipped: " + pdfLink : "PDFLink: " + pdfLink);
+                        if(pdfLink.startsWith("/")) {
+                            pdfLink="http://" + getUrlDomainName(pin.getLink()) + pdfLink;
+                          /*  System.out.println("ORIGINAL LINK: " + pin.getLink());
+                            System.out.println("LINK: " + pdfLink);
+                            System.out.println("Fused Link :" + (pdfLink));*/
+                        }
+                        if(!skipped) {
+                            pin.setPdfLink(pdfLink);
+                        }
                     }
 
                 }
