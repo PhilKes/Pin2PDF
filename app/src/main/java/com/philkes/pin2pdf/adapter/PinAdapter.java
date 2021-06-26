@@ -84,7 +84,8 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
         public void updateData(Pin pin) {
             titleView.setText(pin.getTitle());
             titleView.setOnClickListener(view1 -> {
-                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(pin.getLink()));
+                String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
+                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 context.startActivity(browserIntent);
             });
             Picasso.get().load(pin.getImgUrl()).into(imgView);

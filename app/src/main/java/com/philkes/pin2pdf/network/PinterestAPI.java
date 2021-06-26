@@ -16,6 +16,12 @@ import com.philkes.pin2pdf.network.model.PinsInfosResponse;
 import com.philkes.pin2pdf.network.model.RichMetaData;
 import com.philkes.pin2pdf.network.model.UserPinsResponse;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +50,7 @@ public class PinterestAPI {
                         Integer requestCount=boardNames.size();
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
                         for(String boardName : boardNames) {
-                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown,null);
+                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown, null);
                         }
                         new Thread(() -> {
                             try {
@@ -79,6 +85,7 @@ public class PinterestAPI {
                     public void onResponse(String response) {
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
                         List<Pin> boardPins=responseObj.getBoardPins(boardName);
+                        fillPDFLinks(boardPins);
                         Integer requestCount=1;
                         CountDownLatch requestCountDown2=new CountDownLatch(requestCount);
                         RequestQueue queue2=Volley.newRequestQueue(context);
@@ -107,6 +114,44 @@ public class PinterestAPI {
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
+    }
+
+    private static void fillPDFLinks(List<Pin> boardPins) {
+        for(Pin pin : boardPins) {
+            Thread t1=new Thread(() -> {
+                try {
+
+                    Document doc=Jsoup.connect(pin.getLink())
+                            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
+                            .get();
+                    Elements pinsHrefs=doc
+                            .select("a[href]");
+                    Element pinHref=pinsHrefs
+                            .select(":contains(Print)").first();
+                    if(pinHref==null) {
+                        pinHref=pinsHrefs
+                                .select(":contains(Drucken)").first();
+                    }
+                    if(pinHref!=null) {
+                        String pdfLink=pinHref.attr("href");
+                        System.out.println("PDFLink: " + pdfLink);
+                        pin.setPdfLink(pdfLink);
+                    }
+
+                }
+                catch(IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            t1.start();
+            try {
+                t1.join();
+            }
+            catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<Pin> boardPins) {

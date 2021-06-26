@@ -4,10 +4,13 @@
 * Quick Links to .pdf/print Sites
 
 
-## TODO 
+## TODO
+* Refactor
+* Loading Animation
+* Store tagged Recipes/Pins in local database
+* DO not let Smartphone shutdown screen
 * Add Search Bar Functionality
 * Scrape .PDF/Print links of each recipe
-* Store tagged Recipes/Pins in local database
 * Open Fullscreen image on click
 
 ## Done
