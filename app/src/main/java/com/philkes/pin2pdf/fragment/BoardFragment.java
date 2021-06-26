@@ -1,5 +1,6 @@
 package com.philkes.pin2pdf.fragment;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 import static com.philkes.pin2pdf.fragment.BoardObjectFragment.ARG_BOARD;
 
 /**
- * Fragment containing ViewPager with Tabs for each Board*/
+ * Fragment containing ViewPager with Tabs for each Boards*/
 public class BoardFragment extends Fragment {
     public static final String USER="cryster0416";
     // When requested, this adapter returns a DemoObjectFragment,
@@ -39,6 +40,11 @@ public class BoardFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        ProgressDialog progress = new ProgressDialog(getContext());
+        progress.setTitle("Loading your Pinterest Boards");
+        progress.setMessage("Please wait...");
+        progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
+        progress.show();
         PinterestAPI.requestBoardsOfUser(getContext(), USER, (boards) -> {
             getActivity().runOnUiThread(() -> {
                 demoCollectionPagerAdapter=new BoardPagerAdapter(getChildFragmentManager(),
@@ -47,6 +53,7 @@ public class BoardFragment extends Fragment {
                 viewPager.setAdapter(demoCollectionPagerAdapter);
                 TabLayout tabLayout = view.findViewById(R.id.tab_layout);
                 tabLayout.setupWithViewPager(viewPager);
+                progress.dismiss();
             });
 
         });

@@ -1,5 +1,6 @@
 package com.philkes.pin2pdf.fragment;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -69,12 +70,18 @@ public class BoardObjectFragment extends Fragment {
     }
 
     private void loadPins() {
+        ProgressDialog progress = new ProgressDialog(getContext());
+        progress.setTitle("Loading Pins of '"+boardName+"'");
+        progress.setMessage("Please wait...");
+        progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
+        progress.show();
         PinterestAPI.requestPinsOfBoard(getContext(),USER,boardName,(pins) -> {
             pinsList.clear();
             pinsList.addAll(pins);
             getActivity().runOnUiThread(() -> {
                 pinListViewAdapter.notifyDataSetChanged();
             });
+            progress.dismiss();
         });
 
     }
