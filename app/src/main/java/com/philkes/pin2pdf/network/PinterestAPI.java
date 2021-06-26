@@ -16,21 +16,12 @@ import com.philkes.pin2pdf.network.model.PinsInfosResponse;
 import com.philkes.pin2pdf.network.model.RichMetaData;
 import com.philkes.pin2pdf.network.model.UserPinsResponse;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-
-import static com.philkes.pin2pdf.Util.getUrlDomainName;
 
 public class PinterestAPI {
     private static final String PIN_BASE_URL="https://widgets.pinterest.com/v3/pidgets/";
@@ -44,62 +35,56 @@ public class PinterestAPI {
 
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                        Set<String> boardNames=responseObj.getBoardPins().keySet();
-                        if(onSuccess!=null) {
+                response -> {
+                    UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
+                    Set<String> boardNames=responseObj.getBoardPins().keySet();
+                    if(onSuccess!=null) {
+                        onSuccess.accept(new ArrayList<>(boardNames));
+                    }
+                   /* Integer requestCount=boardNames.size();
+                    CountDownLatch requestCountDown=new CountDownLatch(requestCount);
+                    for(String boardName : boardNames) {
+                        requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown, null);
+                    }
+                    new Thread(() -> {
+                        try {
+                            requestCountDown.await();
                             onSuccess.accept(new ArrayList<>(boardNames));
                         }
-                       /* Integer requestCount=boardNames.size();
-                        CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                        for(String boardName : boardNames) {
-                            requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown, null);
+                        catch(InterruptedException e) {
+                            e.printStackTrace();
                         }
-                        new Thread(() -> {
-                            try {
-                                requestCountDown.await();
-                                onSuccess.accept(new ArrayList<>(boardNames));
-                            }
-                            catch(InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();*/
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "nErrorResponse: Failed");
-            }
-        });
+                    }).start();*/
+                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
 
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
 
     /**
-     * Get Pins of the User's given Board
+     * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
      **/
-    public static void requestPinsOfBoard(Context context, String user, String boardName,
-                                          Consumer<List<Pin>> consumer) {
+    public static void requestPinsOfBoard(Context context, String user, String boardName, boolean getPinInfos,
+                                          boolean scrapePDFlinks, Consumer<List<Pin>> consumer) {
         RequestQueue queue=Volley.newRequestQueue(context);
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                        List<Pin> boardPins=responseObj.getBoardPins(boardName);
-                        // Scrape PDF/Print Links with JSoup
-                        fillPDFLinks(boardPins);
+                response -> {
+                    UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
+                    List<Pin> boardPins=responseObj.getBoardPins(boardName);
+                    // Scrape PDF/Print Links with JSoup
+                    if(scrapePDFlinks) {
+                        scrapePDFLinks(boardPins);
+                    }
+                    if(getPinInfos) {
                         // Counter to wait until requestPinsInfos is done
                         Integer requestCount=1;
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
                         RequestQueue queue2=Volley.newRequestQueue(context);
                         requestPinsInfos(queue2, requestCountDown, boardPins);
+                        // TODO refactor into method 'awaitCountDown(countDown,consumer,result)'
                         new Thread(() -> {
                             try {
                                 requestCountDown.await();
@@ -113,12 +98,7 @@ public class PinterestAPI {
                             }
                         }).start();
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "nErrorResponse: Failed");
-            }
-        });
+                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
@@ -126,53 +106,17 @@ public class PinterestAPI {
     /**
      * Try to scrape PDF/Print Links from original Recipe Link
      **/
-    private static void fillPDFLinks(List<Pin> boardPins) {
-        for(Pin pin : boardPins) {
-            Thread t1=new Thread(() -> {
-                try {
-
-                    Document doc=Jsoup.connect(pin.getLink())
-                            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
-                            .get();
-                    // Get all Links (<a>)
-                    Elements pinsHrefs=doc
-                            .select("a[href]");
-                    // Find Link with Text containing "Print" or "Drucken"
-                    Element pinHref=pinsHrefs
-                            .select(":contains(Print)").first();
-                    if(pinHref==null) {
-                        pinHref=pinsHrefs
-                                .select(":contains(Drucken)").first();
-                    }
-                    if(pinHref!=null) {
-                        String pdfLink=pinHref.attr("href");
-                        // Check if found Link is actual link (not e.g. javascript code)
-                        boolean skipped=pdfLink.equals("#") || pdfLink.contains("javascript") || pdfLink.contains("()");
-                        System.out.println(skipped ? "PDFLink Skipped: " + pdfLink : "PDFLink: " + pdfLink);
-                        if(pdfLink.startsWith("/")) {
-                            pdfLink="http://" + getUrlDomainName(pin.getLink()) + pdfLink;
-                          /*  System.out.println("ORIGINAL LINK: " + pin.getLink());
-                            System.out.println("LINK: " + pdfLink);
-                            System.out.println("Fused Link :" + (pdfLink));*/
-                        }
-                        if(!skipped) {
-                            pin.setPdfLink(pdfLink);
-                        }
-                    }
-
-                }
-                catch(IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            t1.start();
-            try {
-                t1.join();
+    private static void scrapePDFLinks(List<Pin> boardPins) {
+        try {
+            List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
+                    .execute(boardPins.stream().map(Pin::getLink).collect(Collectors.toList()))
+                    .get();
+            for(int i=0; i<boardPins.size(); i++) {
+                boardPins.get(i).setPdfLink(pdfLinks.get(i));
             }
-            catch(InterruptedException e) {
-                e.printStackTrace();
-            }
-
+        }
+        catch(ExecutionException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -184,26 +128,18 @@ public class PinterestAPI {
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
-                        for(int i=0; i<pins.size(); i++) {
-                            RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
-                            String title=pins.get(i).getTitle();
-                            if(metaData!=null && metaData.getArticle()!=null) {
-                                title=metaData.getArticle().getName();
-                            }
-                            pins.get(i).setTitle(title);
+                response -> {
+                    PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
+                    for(int i=0; i<pins.size(); i++) {
+                        RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
+                        String title=pins.get(i).getTitle();
+                        if(metaData!=null && metaData.getArticle()!=null) {
+                            title=metaData.getArticle().getName();
                         }
-                        requestCountDown2.countDown();
+                        pins.get(i).setTitle(title);
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "nErrorResponse: Failed");
-            }
-        });
+                    requestCountDown2.countDown();
+                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
         // Add the request to the RequestQueue.
         queue2.add(stringRequest);
 

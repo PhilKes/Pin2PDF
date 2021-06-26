@@ -12,6 +12,7 @@
 * Add Search Bar Functionality
 * Scrape .PDF/Print links of each recipe
 * Open Fullscreen image on click
+* Error Handling
 
 ## Done
 * RecyclerView of Pins with Image + Title

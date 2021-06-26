@@ -32,7 +32,8 @@ import static com.philkes.pin2pdf.fragment.BoardFragment.USER;
 
 /**
  * Fragments inside of BoardFragment
- * A BoardObjectFragment represents 1 Pinterest Board with its Pins (1 Tab)*/
+ * A BoardObjectFragment represents 1 Pinterest Board with its Pins (1 Tab)
+ */
 public class BoardObjectFragment extends Fragment {
     public static final String ARG_BOARD="board";
 
@@ -70,12 +71,17 @@ public class BoardObjectFragment extends Fragment {
     }
 
     private void loadPins() {
-        ProgressDialog progress = new ProgressDialog(getContext());
-        progress.setTitle("Loading Pins of '"+boardName+"'");
+        ProgressDialog progress=new ProgressDialog(getContext());
+        progress.setTitle("Loading Pins of '" + boardName + "'");
         progress.setMessage("Please wait...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
-        PinterestAPI.requestPinsOfBoard(getContext(),USER,boardName,(pins) -> {
+        // TODO
+        // Get Basic Pin infos of Board with requestPinsOfBoard(getPinInfos:false, scrapePDFLinks: false)
+        // First try to load all fetched Pins Infos from local database
+        // if not present use requestPinsOfBoard(getPinInfos:true, scrapePDFLinks: true)
+        //    -> store results in local database
+        PinterestAPI.requestPinsOfBoard(getContext(), USER, boardName, true, true, (pins) -> {
             pinsList.clear();
             pinsList.addAll(pins);
             getActivity().runOnUiThread(() -> {
