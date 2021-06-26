@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import static com.philkes.pin2pdf.fragment.BoardObjectFragment.ARG_BOARD;
 
+/**
+ * Fragment containing ViewPager with Tabs for each Board*/
 public class BoardFragment extends Fragment {
     public static final String USER="cryster0416";
     // When requested, this adapter returns a DemoObjectFragment,
@@ -37,8 +39,7 @@ public class BoardFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        PinterestAPI.requestPinsOfUser(getContext(), USER, (pins) -> {
-            List<String> boards=pins.keySet().stream().collect(Collectors.toList());
+        PinterestAPI.requestBoardsOfUser(getContext(), USER, (boards) -> {
             getActivity().runOnUiThread(() -> {
                 demoCollectionPagerAdapter=new BoardPagerAdapter(getChildFragmentManager(),
                         boards);

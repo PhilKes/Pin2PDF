@@ -29,8 +29,9 @@ import java.util.stream.Collectors;
 
 import static com.philkes.pin2pdf.fragment.BoardFragment.USER;
 
-// Instances of this class are fragments representing a single
-// object in our collection.
+/**
+ * Fragments inside of BoardFragment
+ * A BoardObjectFragment represents 1 Pinterest Board with its Pins (1 Tab)*/
 public class BoardObjectFragment extends Fragment {
     public static final String ARG_BOARD="board";
 
@@ -68,12 +69,9 @@ public class BoardObjectFragment extends Fragment {
     }
 
     private void loadPins() {
-        Map<String,List<Pin>> pins=new HashMap<>();
-        PinterestAPI.requestPinsOfBoard(getContext(),Volley.newRequestQueue(getContext()),USER,boardName,pins,null,(p) -> {
+        PinterestAPI.requestPinsOfBoard(getContext(),USER,boardName,(pins) -> {
             pinsList.clear();
-            pinsList.addAll(pins.values().stream()
-                    .flatMap(List::stream)
-                    .collect(Collectors.toList()));
+            pinsList.addAll(pins);
             getActivity().runOnUiThread(() -> {
                 pinListViewAdapter.notifyDataSetChanged();
             });

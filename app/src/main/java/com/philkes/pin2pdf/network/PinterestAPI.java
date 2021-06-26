@@ -22,6 +22,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class PinterestAPI {
 
     private static final Gson gson=new Gson();
 
-    public static void requestPinsOfUser(Context context, String user, Consumer<Map<String, List<Pin>>> onSuccess) {
+    public static void requestBoardsOfUser(Context context, String user, Consumer<List<String>> onSuccess) {
         RequestQueue queue=Volley.newRequestQueue(context);
         String url=PIN_BASE_URL + "users/" + user + "/pins";
 
@@ -44,10 +45,12 @@ public class PinterestAPI {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        HashMap<String, List<Pin>> pins=new HashMap<>();
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
                         Set<String> boardNames=responseObj.getBoardPins().keySet();
-                        Integer requestCount=boardNames.size();
+                        if(onSuccess!=null) {
+                            onSuccess.accept(new ArrayList<>(boardNames));
+                        }
+                       /* Integer requestCount=boardNames.size();
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
                         for(String boardName : boardNames) {
                             requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown, null);
@@ -55,12 +58,12 @@ public class PinterestAPI {
                         new Thread(() -> {
                             try {
                                 requestCountDown.await();
-                                onSuccess.accept(pins);
+                                onSuccess.accept(new ArrayList<>(boardNames));
                             }
                             catch(InterruptedException e) {
                                 e.printStackTrace();
                             }
-                        }).start();
+                        }).start();*/
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -73,9 +76,12 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
-    public static void requestPinsOfBoard(Context context, RequestQueue queue, String user, String boardName,
-                                          Map<String, List<Pin>> pins, CountDownLatch requestCountDown,
-                                          Consumer<Map<String, List<Pin>>> consumer) {
+    /**
+     * Get Pins of the User's given Board
+     **/
+    public static void requestPinsOfBoard(Context context, String user, String boardName,
+                                          Consumer<List<Pin>> consumer) {
+        RequestQueue queue=Volley.newRequestQueue(context);
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
@@ -85,20 +91,19 @@ public class PinterestAPI {
                     public void onResponse(String response) {
                         UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
                         List<Pin> boardPins=responseObj.getBoardPins(boardName);
+                        // Scrape PDF/Print Links with JSoup
                         fillPDFLinks(boardPins);
+                        // Counter to wait until requestPinsInfos is done
                         Integer requestCount=1;
-                        CountDownLatch requestCountDown2=new CountDownLatch(requestCount);
+                        CountDownLatch requestCountDown=new CountDownLatch(requestCount);
                         RequestQueue queue2=Volley.newRequestQueue(context);
-                        requestPinsInfos(queue2, requestCountDown2, boardPins);
+                        requestPinsInfos(queue2, requestCountDown, boardPins);
                         new Thread(() -> {
                             try {
-                                requestCountDown2.await();
-                                pins.put(boardName, boardPins);
-                                if(requestCountDown!=null) {
-                                    requestCountDown.countDown();
-                                }
+                                requestCountDown.await();
+                                // Execute consumer if all Pins were loaded
                                 if(consumer!=null) {
-                                    consumer.accept(pins);
+                                    consumer.accept(boardPins);
                                 }
                             }
                             catch(InterruptedException e) {
@@ -116,6 +121,9 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
+    /**
+     * Try to scrape PDF/Print Links from original Recipe Link
+     **/
     private static void fillPDFLinks(List<Pin> boardPins) {
         for(Pin pin : boardPins) {
             Thread t1=new Thread(() -> {
@@ -154,8 +162,11 @@ public class PinterestAPI {
         }
     }
 
-    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<Pin> boardPins) {
-        String idsStr=boardPins.stream().map(Pin::getId).collect(Collectors.joining(","));
+    /**
+     * Get detailed Infos of Pins (fill Title if present)
+     **/
+    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<Pin> pins) {
+        String idsStr=pins.stream().map(Pin::getId).collect(Collectors.joining(","));
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
@@ -163,13 +174,13 @@ public class PinterestAPI {
                     @Override
                     public void onResponse(String response) {
                         PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
-                        for(int i=0; i<boardPins.size(); i++) {
+                        for(int i=0; i<pins.size(); i++) {
                             RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
-                            String title=boardPins.get(i).getTitle();
+                            String title=pins.get(i).getTitle();
                             if(metaData!=null && metaData.getArticle()!=null) {
                                 title=metaData.getArticle().getName();
                             }
-                            boardPins.get(i).setTitle(title);
+                            pins.get(i).setTitle(title);
                         }
                         requestCountDown2.countDown();
                     }
