@@ -1,7 +1,7 @@
 package com.philkes.pin2pdf.network.pinterest;
 
 import android.content.Context;
-import android.support.v4.util.Consumer;
+import androidx.core.util.Consumer;
 import android.util.Log;
 
 import com.android.volley.Request;
