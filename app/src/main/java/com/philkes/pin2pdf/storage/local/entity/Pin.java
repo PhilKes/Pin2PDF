@@ -3,15 +3,19 @@ package com.philkes.pin2pdf.storage.local.entity;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
 
 import com.philkes.pin2pdf.model.PinModel;
 
-@Entity
+import java.util.Date;
+
+@Entity(primaryKeys={"pinId", "board"})
 public class Pin {
+
     @NonNull
-    @PrimaryKey
     public String pinId;
+    @NonNull
+    public String board;
 
     @ColumnInfo
     public String title;
@@ -25,8 +29,6 @@ public class Pin {
     @ColumnInfo
     public String pdfLink;
 
-    @ColumnInfo
-    public String board;
 
     public Pin() {
     }
@@ -41,7 +43,7 @@ public class Pin {
     }
 
     public PinModel toModel() {
-        return new PinModel(title, imgUrl, link, pdfLink,board, pinId);
+        return new PinModel(title, imgUrl, link, pdfLink, board, pinId);
     }
 
     public static Pin fromModel(PinModel model) {

@@ -16,7 +16,6 @@ import com.philkes.pin2pdf.api.Tasks;
 import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse;
 import com.philkes.pin2pdf.api.pinterest.model.RichMetaData;
 import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse;
-import com.philkes.pin2pdf.storage.local.entity.Pin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +44,7 @@ public class PinterestAPI {
         return instance;
     }
 
-    public void requestBoardsOfUser( String user, Consumer<List<String>> onSuccess) {
+    public void requestBoardsOfUser(String user, Consumer<List<String>> onSuccess) {
         String url=PIN_BASE_URL + "users/" + user + "/pins";
 
         // Request a string response from the provided URL.
@@ -66,8 +65,8 @@ public class PinterestAPI {
     /**
      * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
      **/
-    public void requestPinsOfBoard( String user, String boardName, boolean getPinInfos,
-                                          boolean scrapePDFlinks, Consumer<List<PinModel>> consumer) {
+    public void requestPinsOfBoard(String user, String boardName, boolean getPinInfos,
+                                   boolean scrapePDFlinks, Consumer<List<PinModel>> consumer) {
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
@@ -83,8 +82,7 @@ public class PinterestAPI {
                         // Counter to wait until requestPinsInfos is done
                         Integer requestCount=1;
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                        requestPinsInfos(queue, requestCountDown, boardPins);
-                        // TODO refactor into method 'awaitCountDown(countDown,consumer,result)'
+                        requestPinsInfos(boardPins,null,requestCountDown);
                         new Thread(() -> {
                             try {
                                 requestCountDown.await();
@@ -98,7 +96,7 @@ public class PinterestAPI {
                             }
                         }).start();
                     }
-                    else{
+                    else {
                         if(consumer!=null) {
                             consumer.accept(boardPins);
                         }
@@ -111,7 +109,7 @@ public class PinterestAPI {
     /**
      * Try to scrape PDF/Print Links from original Recipe Link
      **/
-    private void scrapePDFLinks(List<PinModel> boardPins) {
+    public void scrapePDFLinks(List<PinModel> boardPins) {
         try {
             List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
                     .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
@@ -128,7 +126,7 @@ public class PinterestAPI {
     /**
      * Get detailed Infos of Pins (fill Title if present)
      **/
-    private void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<PinModel> pins) {
+    public void requestPinsInfos(List<PinModel> pins, Consumer<List<PinModel>> onSuccess, CountDownLatch requestCountDown) {
         String idsStr=pins.stream().map(PinModel::getId).collect(Collectors.joining(","));
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.
@@ -143,10 +141,15 @@ public class PinterestAPI {
                         }
                         pins.get(i).setTitle(title);
                     }
-                    requestCountDown2.countDown();
+                    if(requestCountDown!=null) {
+                        requestCountDown.countDown();
+                    }
+                    if(onSuccess!=null){
+                        onSuccess.accept(pins);
+                    }
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));
         // Add the request to the RequestQueue.
-        queue2.add(stringRequest);
+        queue.add(stringRequest);
 
     }
 

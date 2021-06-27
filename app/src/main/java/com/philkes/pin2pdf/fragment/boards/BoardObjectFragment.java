@@ -73,11 +73,10 @@ public class BoardObjectFragment extends Fragment {
         progress.setMessage("Please wait...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
-        PinterestAPI api= PinterestAPI.getInstance(getContext());
+        PinterestAPI api=PinterestAPI.getInstance(getContext());
         api.requestPinsOfBoard(USER, boardName, false, false, (pins) -> {
             System.out.println("All Pins: " + pins.size());
             DBService dbService=DBService.getInstance(getContext());
-            // TODO Sorting? Reihenfolge der Pins gleich?
             // Try to load all Pins from local DB
             dbService.loadPins(
                     pins.stream().map(PinModel::getId).collect(Collectors.toList()),
@@ -89,8 +88,9 @@ public class BoardObjectFragment extends Fragment {
                         System.out.println("Missing Pins: " + missingPins.size());
                         // Fetch missing Pins from Pinterest API/Scraper
                         if(!missingPins.isEmpty()) {
-                            api.requestPinsOfBoard( USER, boardName, true, true, (fetchedPins) -> {
-                                dbService.insertPins(fetchedPins,()->{
+                            api.scrapePDFLinks(missingPins);
+                            api.requestPinsInfos(missingPins, (fetchedPins) -> {
+                                dbService.insertPins(fetchedPins, () -> {
                                     // Reload all Pins from Local DB
                                     dbService.loadPins(pins.stream().map(PinModel::getId).collect(Collectors.toList()),
                                             (allPins) -> {
@@ -98,7 +98,7 @@ public class BoardObjectFragment extends Fragment {
                                                 progress.dismiss();
                                             });
                                 });
-                            });
+                            }, null);
                         }
                         else {
                             updatePinsList(loadedPins);

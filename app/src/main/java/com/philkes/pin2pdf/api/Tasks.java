@@ -3,6 +3,7 @@ package com.philkes.pin2pdf.api;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.apache.commons.validator.routines.UrlValidator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -27,13 +28,18 @@ public class Tasks {
             for(int i=0; i<urls[0].size(); i++) {
                 String recipeLink=urls[0].get(i);
                 String pdfLink=null;
+
                 Document doc=null;
                 try {
+                    UrlValidator urlValidator=new UrlValidator();
+                    if(!urlValidator.isValid(recipeLink)) {
+                        throw new Exception("Invalid URL found: " + recipeLink);
+                    }
                     doc=Jsoup.connect(recipeLink)
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
                             .get();
                 }
-                catch(IOException e) {
+                catch(Exception e) {
                     e.printStackTrace();
                     pdfLinks.add(null);
                     continue;

@@ -13,6 +13,7 @@
 * Scrape .PDF/Print links of each recipe
 * Open Fullscreen image on click
 * Error Handling
+* Check if Pins were removed
 
 ## Done
 * RecyclerView of Pins with Image + Title

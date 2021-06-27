@@ -15,7 +15,7 @@ public interface PinDao {
     @Query("SELECT * FROM Pin")
     List<Pin> getAll();
 
-    @Query("SELECT * FROM pin WHERE pinId IN (:ids)")
+    @Query("SELECT * FROM pin WHERE pinId IN (:ids) ORDER BY pinId DESC")
     List<Pin> loadAllByIds(List<String> ids);
 
     @Insert
