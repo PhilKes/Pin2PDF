@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import com.google.android.material.tabs.TabLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import android.view.LayoutInflater;
@@ -51,6 +52,7 @@ public class BoardFragment extends Fragment {
                         boards);
                 viewPager=view.findViewById(R.id.boardPager);
                 viewPager.setAdapter(boardCollectionAdapter);
+                viewPager.setOffscreenPageLimit(boards.size());
                 TabLayout tabLayout = view.findViewById(R.id.tab_layout);
                 tabLayout.setupWithViewPager(viewPager);
                 progress.dismiss();
@@ -64,7 +66,7 @@ public class BoardFragment extends Fragment {
 
 // Since this is an object collection, use a FragmentStatePagerAdapter,
 // and NOT a FragmentPagerAdapter.
-class BoardPagerAdapter extends FragmentStatePagerAdapter {
+class BoardPagerAdapter extends FragmentPagerAdapter {
     List<String> boards;
 
     public BoardPagerAdapter(FragmentManager fm, List<String> boards) {
