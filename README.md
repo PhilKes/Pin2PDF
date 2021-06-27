@@ -5,19 +5,19 @@
 
 
 ## TODO
-* Refactor
-* Loading Animation
-* Store tagged Recipes/Pins in local database
+
 * DO not let Smartphone shutdown screen
 * Add Search Bar Functionality
-* Scrape .PDF/Print links of each recipe
 * Open Fullscreen image on click
 * Error Handling
-* Check if Pins were removed
+
 
 ## Done
 * RecyclerView of Pins with Image + Title
 * Pinterest API to get Boards + Pins of User
 * Opens Recipe link directly when clicked on title
 * Separate Boards of User in Tabs
-
+* Loading Animations
+* Store tagged Recipes/Pins in local database
+* Scrape .PDF/Print links of each recipe
+* Check if Pins were removed
