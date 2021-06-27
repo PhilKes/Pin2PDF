@@ -1,7 +1,9 @@
 package com.philkes.pin2pdf.api.pinterest;
 
 import android.content.Context;
+
 import androidx.core.util.Consumer;
+
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -14,6 +16,7 @@ import com.philkes.pin2pdf.api.Tasks;
 import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse;
 import com.philkes.pin2pdf.api.pinterest.model.RichMetaData;
 import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse;
+import com.philkes.pin2pdf.storage.local.entity.Pin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +31,21 @@ public class PinterestAPI {
 
     private static final Gson gson=new Gson();
 
-    public static void requestBoardsOfUser(Context context, String user, Consumer<List<String>> onSuccess) {
-        RequestQueue queue=Volley.newRequestQueue(context);
+    private static PinterestAPI instance;
+    private final RequestQueue queue;
+
+    private PinterestAPI(Context context) {
+        queue=Volley.newRequestQueue(context);
+    }
+
+    public static PinterestAPI getInstance(Context context) {
+        if(instance==null) {
+            instance=new PinterestAPI(context);
+        }
+        return instance;
+    }
+
+    public void requestBoardsOfUser( String user, Consumer<List<String>> onSuccess) {
         String url=PIN_BASE_URL + "users/" + user + "/pins";
 
         // Request a string response from the provided URL.
@@ -40,6 +56,7 @@ public class PinterestAPI {
                     if(onSuccess!=null) {
                         onSuccess.accept(new ArrayList<>(boardNames));
                     }
+
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));
 
         // Add the request to the RequestQueue.
@@ -49,9 +66,8 @@ public class PinterestAPI {
     /**
      * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
      **/
-    public static void requestPinsOfBoard(Context context, String user, String boardName, boolean getPinInfos,
+    public void requestPinsOfBoard( String user, String boardName, boolean getPinInfos,
                                           boolean scrapePDFlinks, Consumer<List<PinModel>> consumer) {
-        RequestQueue queue=Volley.newRequestQueue(context);
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
         // Request a string response from the provided URL.
@@ -67,8 +83,7 @@ public class PinterestAPI {
                         // Counter to wait until requestPinsInfos is done
                         Integer requestCount=1;
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                        RequestQueue queue2=Volley.newRequestQueue(context);
-                        requestPinsInfos(queue2, requestCountDown, boardPins);
+                        requestPinsInfos(queue, requestCountDown, boardPins);
                         // TODO refactor into method 'awaitCountDown(countDown,consumer,result)'
                         new Thread(() -> {
                             try {
@@ -83,6 +98,11 @@ public class PinterestAPI {
                             }
                         }).start();
                     }
+                    else{
+                        if(consumer!=null) {
+                            consumer.accept(boardPins);
+                        }
+                    }
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
@@ -91,7 +111,7 @@ public class PinterestAPI {
     /**
      * Try to scrape PDF/Print Links from original Recipe Link
      **/
-    private static void scrapePDFLinks(List<PinModel> boardPins) {
+    private void scrapePDFLinks(List<PinModel> boardPins) {
         try {
             List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
                     .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
@@ -108,7 +128,7 @@ public class PinterestAPI {
     /**
      * Get detailed Infos of Pins (fill Title if present)
      **/
-    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<PinModel> pins) {
+    private void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<PinModel> pins) {
         String idsStr=pins.stream().map(PinModel::getId).collect(Collectors.joining(","));
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.

@@ -1,23 +1,29 @@
 package com.philkes.pin2pdf;
 
 import android.os.Bundle;
+
 import androidx.core.view.MenuItemCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.storage.local.service.DBService;
 
+public class MainActivity extends AppCompatActivity {
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        DBService.getInstance(this);
+        PinterestAPI.getInstance(this);
         //setupUI();
-       // loadPins();
+        // loadPins();
     }
 
 

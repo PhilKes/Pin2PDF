@@ -10,11 +10,11 @@ public class PinModel {
     private String board;
     private String id;
 
-    public PinModel(String title, String imgUrl, String link, String board, String id) {
+    public PinModel(String title, String imgUrl, String link, String pdfLink,String board, String id) {
         setTitle(title);
         setImgUrl(imgUrl);
         setLink(link);
-        setPdfLink(null);
+        setPdfLink(pdfLink);
         setBoard(board);
         this.id=id;
     }

@@ -83,6 +83,7 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
             titleView.setText(pin.getTitle());
             titleView.setOnClickListener(view1 -> {
                 String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
+                System.out.println("Open in Chrome: "+link);
                 Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 context.startActivity(browserIntent);
             });

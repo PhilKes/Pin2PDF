@@ -26,7 +26,7 @@ public class BoardFragment extends Fragment {
     public static final String USER="cryster0416";
     // When requested, this adapter returns a DemoObjectFragment,
     // representing an object in the collection.
-    BoardPagerAdapter demoCollectionPagerAdapter;
+    BoardPagerAdapter boardCollectionAdapter;
     ViewPager viewPager;
 
     @Nullable
@@ -44,12 +44,13 @@ public class BoardFragment extends Fragment {
         progress.setMessage("Please wait...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
-        PinterestAPI.requestBoardsOfUser(getContext(), USER, (boards) -> {
+        PinterestAPI api= PinterestAPI.getInstance(getContext());
+        api.requestBoardsOfUser(USER, (boards) -> {
             getActivity().runOnUiThread(() -> {
-                demoCollectionPagerAdapter=new BoardPagerAdapter(getChildFragmentManager(),
+                boardCollectionAdapter=new BoardPagerAdapter(getChildFragmentManager(),
                         boards);
                 viewPager=view.findViewById(R.id.boardPager);
-                viewPager.setAdapter(demoCollectionPagerAdapter);
+                viewPager.setAdapter(boardCollectionAdapter);
                 TabLayout tabLayout = view.findViewById(R.id.tab_layout);
                 tabLayout.setupWithViewPager(viewPager);
                 progress.dismiss();

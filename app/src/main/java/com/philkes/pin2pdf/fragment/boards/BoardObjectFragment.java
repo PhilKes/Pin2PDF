@@ -2,6 +2,7 @@ package com.philkes.pin2pdf.fragment.boards;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +19,11 @@ import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.adapter.PinAdapter;
 import com.philkes.pin2pdf.model.PinModel;
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.storage.local.service.DBService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.philkes.pin2pdf.fragment.boards.BoardFragment.USER;
 
@@ -69,19 +73,48 @@ public class BoardObjectFragment extends Fragment {
         progress.setMessage("Please wait...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
-        // TODO
-        // Get Basic Pin infos of Board with requestPinsOfBoard(getPinInfos:false, scrapePDFLinks: false)
-        // First try to load all fetched Pins Infos from local database
-        // if not present use requestPinsOfBoard(getPinInfos:true, scrapePDFLinks: true)
-        //    -> store results in local database
-        PinterestAPI.requestPinsOfBoard(getContext(), USER, boardName, true, false, (pins) -> {
-            pinsList.clear();
-            pinsList.addAll(pins);
-            getActivity().runOnUiThread(() -> {
-                pinListViewAdapter.notifyDataSetChanged();
-            });
-            progress.dismiss();
+        PinterestAPI api= PinterestAPI.getInstance(getContext());
+        api.requestPinsOfBoard(USER, boardName, false, false, (pins) -> {
+            System.out.println("All Pins: " + pins.size());
+            DBService dbService=DBService.getInstance(getContext());
+            // TODO Sorting? Reihenfolge der Pins gleich?
+            // Try to load all Pins from local DB
+            dbService.loadPins(
+                    pins.stream().map(PinModel::getId).collect(Collectors.toList()),
+                    (loadedPins) -> {
+                        System.out.println("Loaded Pins: " + loadedPins.size());
+                        // Check if any Pins weren't loaded from local DB
+                        List<PinModel> missingPins=new ArrayList<>(pins);
+                        missingPins.removeIf(pinModel -> loadedPins.stream().anyMatch(pin -> pin.getId().equals(pinModel.getId())));
+                        System.out.println("Missing Pins: " + missingPins.size());
+                        // Fetch missing Pins from Pinterest API/Scraper
+                        if(!missingPins.isEmpty()) {
+                            api.requestPinsOfBoard( USER, boardName, true, true, (fetchedPins) -> {
+                                dbService.insertPins(fetchedPins,()->{
+                                    // Reload all Pins from Local DB
+                                    dbService.loadPins(pins.stream().map(PinModel::getId).collect(Collectors.toList()),
+                                            (allPins) -> {
+                                                updatePinsList(allPins);
+                                                progress.dismiss();
+                                            });
+                                });
+                            });
+                        }
+                        else {
+                            updatePinsList(loadedPins);
+                            progress.dismiss();
+                        }
+                    });
+
         });
 
+    }
+
+    private void updatePinsList(List<PinModel> pins) {
+        pinsList.clear();
+        pinsList.addAll(pins);
+        getActivity().runOnUiThread(() -> {
+            pinListViewAdapter.notifyDataSetChanged();
+        });
     }
 }

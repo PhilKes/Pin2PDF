@@ -16,10 +16,10 @@ public interface PinDao {
     List<Pin> getAll();
 
     @Query("SELECT * FROM pin WHERE pinId IN (:ids)")
-    List<Pin> loadAllByIds(String[] ids);
+    List<Pin> loadAllByIds(List<String> ids);
 
     @Insert
-    void insertAll(Pin... pins);
+    void insertAll(List<Pin> pins);
 
     @Delete
     void delete(Pin pin);
