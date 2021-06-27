@@ -1,8 +1,7 @@
-package com.philkes.pin2pdf.network.model;
+package com.philkes.pin2pdf.network.pinterest.model;
 
-import com.philkes.pin2pdf.model.Pin;
+import com.philkes.pin2pdf.data.Pin;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

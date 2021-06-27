@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.network.model;
+package com.philkes.pin2pdf.network.pinterest.model;
 
 public class RichMetaData {
     private ArticleData article;

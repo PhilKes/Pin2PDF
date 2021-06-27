@@ -1,6 +1,6 @@
-package com.philkes.pin2pdf.mock;
+package com.philkes.pin2pdf.data.mock;
 
-import com.philkes.pin2pdf.model.Pin;
+import com.philkes.pin2pdf.data.Pin;
 
 import java.util.ArrayList;
 import java.util.Arrays;

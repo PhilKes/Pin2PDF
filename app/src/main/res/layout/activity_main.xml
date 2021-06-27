@@ -8,7 +8,7 @@
 
 
     <fragment
-            android:name="com.philkes.pin2pdf.fragment.BoardFragment"
+            android:name="com.philkes.pin2pdf.fragment.boards.BoardFragment"
             android:id="@+id/boardFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

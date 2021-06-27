@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.network;
+package com.philkes.pin2pdf.network.pinterest;
 
 import android.content.Context;
 import android.support.v4.util.Consumer;
@@ -6,15 +6,14 @@ import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-import com.philkes.pin2pdf.model.Pin;
-import com.philkes.pin2pdf.network.model.PinsInfosResponse;
-import com.philkes.pin2pdf.network.model.RichMetaData;
-import com.philkes.pin2pdf.network.model.UserPinsResponse;
+import com.philkes.pin2pdf.data.Pin;
+import com.philkes.pin2pdf.network.Tasks;
+import com.philkes.pin2pdf.network.pinterest.model.PinsInfosResponse;
+import com.philkes.pin2pdf.network.pinterest.model.RichMetaData;
+import com.philkes.pin2pdf.network.pinterest.model.UserPinsResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,20 +40,6 @@ public class PinterestAPI {
                     if(onSuccess!=null) {
                         onSuccess.accept(new ArrayList<>(boardNames));
                     }
-                   /* Integer requestCount=boardNames.size();
-                    CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                    for(String boardName : boardNames) {
-                        requestPinsOfBoard(context, queue, user, boardName, pins, requestCountDown, null);
-                    }
-                    new Thread(() -> {
-                        try {
-                            requestCountDown.await();
-                            onSuccess.accept(new ArrayList<>(boardNames));
-                        }
-                        catch(InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();*/
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));
 
         // Add the request to the RequestQueue.

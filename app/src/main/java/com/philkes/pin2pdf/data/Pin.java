@@ -1,6 +1,4 @@
-package com.philkes.pin2pdf.model;
-
-import com.philkes.pin2pdf.Util;
+package com.philkes.pin2pdf.data;
 
 import static com.philkes.pin2pdf.Util.toStr;
 

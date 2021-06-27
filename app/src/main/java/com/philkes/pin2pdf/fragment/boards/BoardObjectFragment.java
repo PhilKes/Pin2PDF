@@ -1,7 +1,6 @@
-package com.philkes.pin2pdf.fragment;
+package com.philkes.pin2pdf.fragment.boards;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,22 +12,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.adapter.PinAdapter;
-import com.philkes.pin2pdf.model.Pin;
-import com.philkes.pin2pdf.network.PinterestAPI;
+import com.philkes.pin2pdf.data.Pin;
+import com.philkes.pin2pdf.network.pinterest.PinterestAPI;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static com.philkes.pin2pdf.fragment.BoardFragment.USER;
+import static com.philkes.pin2pdf.fragment.boards.BoardFragment.USER;
 
 /**
  * Fragments inside of BoardFragment

@@ -1,8 +1,6 @@
-package com.philkes.pin2pdf.network.model;
+package com.philkes.pin2pdf.network.pinterest.model;
 
-import com.philkes.pin2pdf.model.Pin;
-
-import java.util.List;
+import com.philkes.pin2pdf.data.Pin;
 
 public class PinResponse {
     private ImagesResponse images;

@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.fragment;
+package com.philkes.pin2pdf.fragment.boards;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
@@ -14,12 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.philkes.pin2pdf.R;
-import com.philkes.pin2pdf.network.PinterestAPI;
+import com.philkes.pin2pdf.network.pinterest.PinterestAPI;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static com.philkes.pin2pdf.fragment.BoardObjectFragment.ARG_BOARD;
+import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD;
 
 /**
  * Fragment containing ViewPager with Tabs for each Boards*/
