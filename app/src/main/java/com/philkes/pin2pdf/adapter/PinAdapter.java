@@ -12,16 +12,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.philkes.pin2pdf.R;
-import com.philkes.pin2pdf.data.Pin;
+import com.philkes.pin2pdf.model.PinModel;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 
 public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
-    private List<Pin> pins;
+    private List<PinModel> pins;
 
-    public PinAdapter(List<Pin> pins) {
+    public PinAdapter(List<PinModel> pins) {
         this.pins=pins;
     }
 
@@ -79,7 +79,7 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
             });*/
         }
 
-        public void updateData(Pin pin) {
+        public void updateData(PinModel pin) {
             titleView.setText(pin.getTitle());
             titleView.setOnClickListener(view1 -> {
                 String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();

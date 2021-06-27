@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.network.pinterest.model;
+package com.philkes.pin2pdf.api.pinterest.model;
 
 import com.google.gson.annotations.SerializedName;
 

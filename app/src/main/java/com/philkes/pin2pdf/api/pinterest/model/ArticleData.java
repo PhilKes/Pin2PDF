@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.network.pinterest.model;
+package com.philkes.pin2pdf.api.pinterest.model;
 
 import static com.philkes.pin2pdf.Util.toStr;
 

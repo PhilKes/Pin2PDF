@@ -1,8 +1,8 @@
-package com.philkes.pin2pdf.data;
+package com.philkes.pin2pdf.model;
 
 import static com.philkes.pin2pdf.Util.toStr;
 
-public class Pin {
+public class PinModel {
     private String title;
     private String imgUrl;
     private String link;
@@ -10,7 +10,7 @@ public class Pin {
     private String board;
     private String id;
 
-    public Pin(String title, String imgUrl, String link, String board, String id) {
+    public PinModel(String title, String imgUrl, String link, String board, String id) {
         setTitle(title);
         setImgUrl(imgUrl);
         setLink(link);

@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.philkes.pin2pdf.R;
-import com.philkes.pin2pdf.network.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
 
 import java.util.List;
 

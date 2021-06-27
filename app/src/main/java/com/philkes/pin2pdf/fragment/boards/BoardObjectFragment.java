@@ -15,8 +15,8 @@ import android.view.ViewGroup;
 
 import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.adapter.PinAdapter;
-import com.philkes.pin2pdf.data.Pin;
-import com.philkes.pin2pdf.network.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.model.PinModel;
+import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class BoardObjectFragment extends Fragment {
 
     private RecyclerView pinListView;
     private RecyclerView.Adapter pinListViewAdapter;
-    private List<Pin> pinsList;
+    private List<PinModel> pinsList;
     private String boardName;
 
     @Override

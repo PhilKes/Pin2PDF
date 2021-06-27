@@ -1,6 +1,6 @@
-package com.philkes.pin2pdf.network.pinterest.model;
+package com.philkes.pin2pdf.api.pinterest.model;
 
-import com.philkes.pin2pdf.data.Pin;
+import com.philkes.pin2pdf.model.PinModel;
 
 import java.util.List;
 import java.util.Map;
@@ -20,18 +20,18 @@ public class UserPinsResponse {
         this.data=data;
     }
 
-    public Map<String, List<Pin>> getBoardPins() {
-        Map<String, List<Pin>> boardPins=data.getPins().stream()
+    public Map<String, List<PinModel>> getBoardPins() {
+        Map<String, List<PinModel>> boardPins=data.getPins().stream()
                 .map(PinResponse::toPin)
-                .collect(Collectors.groupingBy(Pin::getBoard));
+                .collect(Collectors.groupingBy(PinModel::getBoard));
         return boardPins;
     }
 
-    public List<Pin> getPins() {
+    public List<PinModel> getPins() {
         return data.getPins().stream().map(PinResponse::toPin).collect(Collectors.toList());
     }
 
-    public List<Pin> getBoardPins(String boardName) {
+    public List<PinModel> getBoardPins(String boardName) {
         return data.getPins().stream().map(pinResponse -> pinResponse.toBoardPin(boardName)).collect(Collectors.toList());
     }
 }

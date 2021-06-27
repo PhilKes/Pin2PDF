@@ -1,4 +1,4 @@
-package com.philkes.pin2pdf.network.pinterest;
+package com.philkes.pin2pdf.api.pinterest;
 
 import android.content.Context;
 import androidx.core.util.Consumer;
@@ -9,11 +9,11 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-import com.philkes.pin2pdf.data.Pin;
-import com.philkes.pin2pdf.network.Tasks;
-import com.philkes.pin2pdf.network.pinterest.model.PinsInfosResponse;
-import com.philkes.pin2pdf.network.pinterest.model.RichMetaData;
-import com.philkes.pin2pdf.network.pinterest.model.UserPinsResponse;
+import com.philkes.pin2pdf.model.PinModel;
+import com.philkes.pin2pdf.api.Tasks;
+import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse;
+import com.philkes.pin2pdf.api.pinterest.model.RichMetaData;
+import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class PinterestAPI {
      * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
      **/
     public static void requestPinsOfBoard(Context context, String user, String boardName, boolean getPinInfos,
-                                          boolean scrapePDFlinks, Consumer<List<Pin>> consumer) {
+                                          boolean scrapePDFlinks, Consumer<List<PinModel>> consumer) {
         RequestQueue queue=Volley.newRequestQueue(context);
         String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
 
@@ -58,7 +58,7 @@ public class PinterestAPI {
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
                 response -> {
                     UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                    List<Pin> boardPins=responseObj.getBoardPins(boardName);
+                    List<PinModel> boardPins=responseObj.getBoardPins(boardName);
                     // Scrape PDF/Print Links with JSoup
                     if(scrapePDFlinks) {
                         scrapePDFLinks(boardPins);
@@ -91,10 +91,10 @@ public class PinterestAPI {
     /**
      * Try to scrape PDF/Print Links from original Recipe Link
      **/
-    private static void scrapePDFLinks(List<Pin> boardPins) {
+    private static void scrapePDFLinks(List<PinModel> boardPins) {
         try {
             List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
-                    .execute(boardPins.stream().map(Pin::getLink).collect(Collectors.toList()))
+                    .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
                     .get();
             for(int i=0; i<boardPins.size(); i++) {
                 boardPins.get(i).setPdfLink(pdfLinks.get(i));
@@ -108,8 +108,8 @@ public class PinterestAPI {
     /**
      * Get detailed Infos of Pins (fill Title if present)
      **/
-    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<Pin> pins) {
-        String idsStr=pins.stream().map(Pin::getId).collect(Collectors.joining(","));
+    private static void requestPinsInfos(RequestQueue queue2, CountDownLatch requestCountDown2, List<PinModel> pins) {
+        String idsStr=pins.stream().map(PinModel::getId).collect(Collectors.joining(","));
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,

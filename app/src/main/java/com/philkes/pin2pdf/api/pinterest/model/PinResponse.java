@@ -1,6 +1,6 @@
-package com.philkes.pin2pdf.network.pinterest.model;
+package com.philkes.pin2pdf.api.pinterest.model;
 
-import com.philkes.pin2pdf.data.Pin;
+import com.philkes.pin2pdf.model.PinModel;
 
 public class PinResponse {
     private ImagesResponse images;
@@ -60,13 +60,13 @@ public class PinResponse {
         return board!=null ? board.getName() : null;
     }
 
-    public Pin toPin() {
-        return new Pin(getDescription(), getSmallImg(), getLink(), getBoardName(), getId());
+    public PinModel toPin() {
+        return new PinModel(getDescription(), getSmallImg(), getLink(), getBoardName(), getId());
 
     }
 
-    public Pin toBoardPin(String boardName) {
-        return new Pin(getDescription(), getSmallImg(), getLink(), boardName, getId());
+    public PinModel toBoardPin(String boardName) {
+        return new PinModel(getDescription(), getSmallImg(), getLink(), boardName, getId());
 
     }
 }
