@@ -1,6 +1,6 @@
 package com.philkes.pin2pdf.model;
 
-import static com.philkes.pin2pdf.Util.toStr;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class PinModel {
     private String title;
@@ -24,8 +24,7 @@ public class PinModel {
     }
 
     public void setBoard(String board) {
-        this.board=toStr(board)
-                .toLowerCase()
+        this.board=StringEscapeUtils.unescapeHtml3(board)
                 .replace("/", "")
                 .replace(" ","-");
     }
@@ -35,7 +34,7 @@ public class PinModel {
     }
 
     public void setTitle(String title) {
-        this.title=toStr(title);
+        this.title=StringEscapeUtils.unescapeHtml3(title);
     }
 
     public String getImgUrl() {

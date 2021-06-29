@@ -5,7 +5,7 @@
 
 
 ## TODO
-
+* List with Material Cards
 * DO not let Smartphone shutdown screen
 * Add Search Bar Functionality
 * Open Fullscreen image on click

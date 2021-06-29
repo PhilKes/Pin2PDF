@@ -1,6 +1,7 @@
 package com.philkes.pin2pdf.api.pinterest.model;
 
-import static com.philkes.pin2pdf.Util.toStr;
+import org.apache.commons.lang3.StringEscapeUtils;
+
 
 public class ArticleData {
     private String name;
@@ -9,10 +10,10 @@ public class ArticleData {
     }
 
     public String getName() {
-        return toStr(name);
+        return StringEscapeUtils.unescapeHtml3(name);
     }
 
     public void setName(String name) {
-        this.name=toStr(name);
+        this.name=StringEscapeUtils.unescapeHtml3(name);
     }
 }
