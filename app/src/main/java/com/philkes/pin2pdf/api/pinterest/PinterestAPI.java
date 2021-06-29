@@ -4,6 +4,7 @@ import android.content.Context;
 
 import androidx.core.util.Consumer;
 
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -51,9 +52,12 @@ public class PinterestAPI {
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
                 response -> {
                     UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                    Set<String> boardNames=responseObj.getBoardPins().keySet();
+                    List<String> boardNames=responseObj.getBoardPins().keySet()
+                            .stream()
+                            .sorted()
+                            .collect(Collectors.toList());
                     if(onSuccess!=null) {
-                        onSuccess.accept(new ArrayList<>(boardNames));
+                        onSuccess.accept(boardNames);
                     }
 
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));

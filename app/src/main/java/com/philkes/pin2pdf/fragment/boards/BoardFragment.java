@@ -55,6 +55,8 @@ public class BoardFragment extends Fragment {
                 viewPager.setOffscreenPageLimit(boards.size());
                 TabLayout tabLayout = view.findViewById(R.id.tab_layout);
                 tabLayout.setupWithViewPager(viewPager);
+                tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
+                tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
                 progress.dismiss();
             });
 

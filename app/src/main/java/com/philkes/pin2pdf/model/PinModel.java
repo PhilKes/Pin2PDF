@@ -24,7 +24,10 @@ public class PinModel {
     }
 
     public void setBoard(String board) {
-        this.board=toStr(board).replace("/", "");
+        this.board=toStr(board)
+                .toLowerCase()
+                .replace("/", "")
+                .replace(" ","-");
     }
 
     public String getTitle() {
