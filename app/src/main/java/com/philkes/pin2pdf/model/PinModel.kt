@@ -1,71 +1,38 @@
-package com.philkes.pin2pdf.model;
+package com.philkes.pin2pdf.model
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils
 
-public class PinModel {
-    private String title;
-    private String imgUrl;
-    private String link;
-    private String pdfLink;
-    private String board;
-    private String id;
-
-    public PinModel(String title, String imgUrl, String link, String pdfLink,String board, String id) {
-        setTitle(title);
-        setImgUrl(imgUrl);
-        setLink(link);
-        setPdfLink(pdfLink);
-        setBoard(board);
-        this.id=id;
-    }
-
-    public String getBoard() {
-        return board;
-    }
-
-    public void setBoard(String board) {
-        this.board=StringEscapeUtils.unescapeHtml3(board)
+class PinModel {
+    var title: String? = null
+        set(title) {
+            field = StringEscapeUtils.unescapeHtml3(title)
+        }
+    var imgUrl: String? = null
+    var link: String? = null
+    var pdfLink: String? = null
+    var board: String? = null
+        set(board) {
+            field = StringEscapeUtils.unescapeHtml3(board)
                 .replace("/", "")
-                .replace(" ","-");
+                .replace(" ", "-")
+        }
+    var id: String? = null
+
+    constructor()
+    constructor(
+        title: String?,
+        imgUrl: String?,
+        link: String?,
+        pdfLink: String?,
+        board: String?,
+        id: String?
+    ) {
+        this.title = title
+        this.imgUrl = imgUrl
+        this.link = link
+        this.pdfLink = pdfLink
+        this.board = board
+        this.id = id
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title=StringEscapeUtils.unescapeHtml3(title);
-    }
-
-    public String getImgUrl() {
-        return imgUrl;
-    }
-
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl=imgUrl;
-    }
-
-    public String getLink() {
-        return link;
-    }
-
-    public void setLink(String link) {
-        this.link=link;
-    }
-
-    public String getPdfLink() {
-        return pdfLink;
-    }
-
-    public void setPdfLink(String pdfLink) {
-        this.pdfLink=pdfLink;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id=id;
-    }
 }

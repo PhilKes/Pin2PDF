@@ -1,4 +1,7 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 30
@@ -48,7 +51,7 @@ dependencies {
     def room_version = "2.3.0"
 
     implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
 
 /*    // optional - RxJava2 support for Room
     implementation "androidx.room:room-rxjava2:$room_version"
@@ -66,6 +69,12 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 
     compile 'commons-validator:commons-validator:1.7'
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+/*    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.5.10'*/
 
-
+}
+repositories {
+    mavenCentral()
 }

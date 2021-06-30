@@ -1,53 +1,54 @@
-package com.philkes.pin2pdf.storage.local.entity;
+package com.philkes.pin2pdf.storage.local.entity
 
-import androidx.annotation.NonNull;
-import androidx.room.ColumnInfo;
-import androidx.room.Entity;
-import androidx.room.TypeConverters;
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import com.philkes.pin2pdf.model.PinModel
 
-import com.philkes.pin2pdf.model.PinModel;
+@Entity(primaryKeys = ["pinId", "board"])
+class Pin {
 
-import java.util.Date;
-
-@Entity(primaryKeys={"pinId", "board"})
-public class Pin {
-
-    @NonNull
-    public String pinId;
-    @NonNull
-    public String board;
+    var pinId: String? = null
+    var board: String? = null
 
     @ColumnInfo
-    public String title;
+    var title: String? = null
 
     @ColumnInfo
-    public String imgUrl;
+    var imgUrl: String? = null
 
     @ColumnInfo
-    public String link;
+    var link: String? = null
 
     @ColumnInfo
-    public String pdfLink;
+    var pdfLink: String? = null
 
-
-    public Pin() {
+    constructor() {}
+    private constructor(
+        pinId: String?,
+        title: String?,
+        imgUrl: String?,
+        link: String?,
+        pdfLink: String?,
+        board: String?
+    ) {
+        this.pinId = pinId
+        this.title = title
+        this.imgUrl = imgUrl
+        this.link = link
+        this.pdfLink = pdfLink
+        this.board = board
     }
 
-    private Pin(String pinId, String title, String imgUrl, String link, String pdfLink, String board) {
-        this.pinId=pinId;
-        this.title=title;
-        this.imgUrl=imgUrl;
-        this.link=link;
-        this.pdfLink=pdfLink;
-        this.board=board;
+    fun toModel(): PinModel {
+        return PinModel(title, imgUrl, link, pdfLink, board, pinId)
     }
 
-    public PinModel toModel() {
-        return new PinModel(title, imgUrl, link, pdfLink, board, pinId);
-    }
-
-    public static Pin fromModel(PinModel model) {
-        return new Pin(model.getId(), model.getTitle(), model.getImgUrl(),
-                model.getLink(), model.getPdfLink(), model.getBoard());
+    companion object {
+        fun fromModel(model: PinModel): Pin {
+            return Pin(
+                model.id, model.title, model.imgUrl,
+                model.link, model.pdfLink, model.board
+            )
+        }
     }
 }

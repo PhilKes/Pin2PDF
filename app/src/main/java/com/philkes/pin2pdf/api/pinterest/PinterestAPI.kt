@@ -1,160 +1,146 @@
-package com.philkes.pin2pdf.api.pinterest;
+package com.philkes.pin2pdf.api.pinterest
 
-import android.content.Context;
+import android.content.Context
+import android.util.Log
+import androidx.core.util.Consumer
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.google.gson.Gson
+import com.philkes.pin2pdf.api.Tasks.ScrapePDFLinksTask
+import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse
+import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse
+import com.philkes.pin2pdf.model.PinModel
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
+import java.util.stream.Collectors
 
-import androidx.core.util.Consumer;
-
-import android.util.ArraySet;
-import android.util.Log;
-
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
-import com.philkes.pin2pdf.model.PinModel;
-import com.philkes.pin2pdf.api.Tasks;
-import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse;
-import com.philkes.pin2pdf.api.pinterest.model.RichMetaData;
-import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-
-public class PinterestAPI {
-    private static final String PIN_BASE_URL="https://widgets.pinterest.com/v3/pidgets/";
-    private static final String TAG="PinterestAPI";
-
-    private static final Gson gson=new Gson();
-
-    private static PinterestAPI instance;
-    private final RequestQueue queue;
-
-    private PinterestAPI(Context context) {
-        queue=Volley.newRequestQueue(context);
-    }
-
-    public static PinterestAPI getInstance(Context context) {
-        if(instance==null) {
-            instance=new PinterestAPI(context);
-        }
-        return instance;
-    }
-
-    public void requestBoardsOfUser(String user, Consumer<List<String>> onSuccess) {
-        String url=PIN_BASE_URL + "users/" + user + "/pins";
+class PinterestAPI private constructor(context: Context) {
+    private val queue: RequestQueue
+    fun requestBoardsOfUser(user: String, onSuccess: Consumer<List<String>>?) {
+        val url = PIN_BASE_URL + "users/" + user + "/pins"
 
         // Request a string response from the provided URL.
-        StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                response -> {
-                    UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                    List<String> boardNames=responseObj.getBoardPins().keySet()
-                            .stream()
-                            .sorted()
-                            .collect(Collectors.toList());
-                    if(onSuccess!=null) {
-                        onSuccess.accept(boardNames);
-                    }
-
-                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            { response: String? ->
+                val responseObj = gson.fromJson(response, UserPinsResponse::class.java)
+                val boardNames = responseObj.boardPins.keys
+                    .stream()
+                    .sorted()
+                    .collect(Collectors.toList())
+                onSuccess?.accept(boardNames)
+            }) { error: VolleyError? -> Log.e(TAG, "nErrorResponse: Failed") }
 
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        queue.add(stringRequest)
     }
 
     /**
      * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
-     **/
-    public void requestPinsOfBoard(String user, String boardName, boolean getPinInfos,
-                                   boolean scrapePDFlinks, Consumer<List<PinModel>> consumer) {
-        String url=PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins";
+     */
+    fun requestPinsOfBoard(
+        user: String, boardName: String, getPinInfos: Boolean,
+        scrapePDFlinks: Boolean, consumer: Consumer<List<PinModel>>?
+    ) {
+        val url = PIN_BASE_URL + "boards/" + user + "/" + boardName + "/pins"
 
         // Request a string response from the provided URL.
-        StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                response -> {
-                    UserPinsResponse responseObj=gson.fromJson(response, UserPinsResponse.class);
-                    List<PinModel> boardPins=responseObj.getBoardPins(boardName);
-                    // Scrape PDF/Print Links with JSoup
-                    if(scrapePDFlinks) {
-                        scrapePDFLinks(boardPins);
-                    }
-                    if(getPinInfos) {
-                        // Counter to wait until requestPinsInfos is done
-                        Integer requestCount=1;
-                        CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                        requestPinsInfos(boardPins,null,requestCountDown);
-                        new Thread(() -> {
-                            try {
-                                requestCountDown.await();
-                                // Execute consumer if all Pins were loaded
-                                if(consumer!=null) {
-                                    consumer.accept(boardPins);
-                                }
-                            }
-                            catch(InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
-                    }
-                    else {
-                        if(consumer!=null) {
-                            consumer.accept(boardPins);
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            { response: String? ->
+                val responseObj = gson.fromJson(response, UserPinsResponse::class.java)
+                val boardPins = responseObj.getBoardPins(boardName)
+                // Scrape PDF/Print Links with JSoup
+                if (scrapePDFlinks) {
+                    scrapePDFLinks(boardPins)
+                }
+                if (getPinInfos) {
+                    // Counter to wait until requestPinsInfos is done
+                    val requestCount = 1
+                    val requestCountDown = CountDownLatch(requestCount)
+                    requestPinsInfos(boardPins, null, requestCountDown)
+                    Thread {
+                        try {
+                            requestCountDown.await()
+                            // Execute consumer if all Pins were loaded
+                            consumer?.accept(boardPins)
+                        } catch (e: InterruptedException) {
+                            e.printStackTrace()
                         }
-                    }
-                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
+                    }.start()
+                } else {
+                    consumer?.accept(boardPins)
+                }
+            }) { error: VolleyError? -> Log.e(TAG, "nErrorResponse: Failed") }
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        queue.add(stringRequest)
     }
 
     /**
      * Try to scrape PDF/Print Links from original Recipe Link
-     **/
-    public void scrapePDFLinks(List<PinModel> boardPins) {
+     */
+    fun scrapePDFLinks(boardPins: List<PinModel>) {
         try {
-            List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
-                    .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
-                    .get();
-            for(int i=0; i<boardPins.size(); i++) {
-                boardPins.get(i).setPdfLink(pdfLinks.get(i));
+            val pdfLinks = ScrapePDFLinksTask()
+                .execute(boardPins.map { it.link!! })
+                .get()
+            for (i in boardPins.indices) {
+                boardPins[i].pdfLink = pdfLinks[i]
             }
-        }
-        catch(ExecutionException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (e: ExecutionException) {
+            e.printStackTrace()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
     }
 
     /**
      * Get detailed Infos of Pins (fill Title if present)
-     **/
-    public void requestPinsInfos(List<PinModel> pins, Consumer<List<PinModel>> onSuccess, CountDownLatch requestCountDown) {
-        String idsStr=pins.stream().map(PinModel::getId).collect(Collectors.joining(","));
-        String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
+     */
+    fun requestPinsInfos(
+        pins: List<PinModel>,
+        onSuccess: Consumer<List<PinModel>>?,
+        requestCountDown: CountDownLatch?
+    ) {
+        val idsStr = pins.stream().map(PinModel::id).collect(Collectors.joining(","))
+        val url = PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr
         // Request a string response from the provided URL.
-        StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
-                response -> {
-                    PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
-                    for(int i=0; i<pins.size(); i++) {
-                        RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
-                        String title=pins.get(i).getTitle();
-                        if(metaData!=null && metaData.getArticle()!=null) {
-                            title=metaData.getArticle().getName();
-                        }
-                        pins.get(i).setTitle(title);
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            { response: String? ->
+                val responseObj = gson.fromJson(response, PinsInfosResponse::class.java)
+                for (i in pins.indices) {
+                    val metaData = responseObj.data?.get(i)?.richMetaData
+                    var title = pins[i].title
+                    if (metaData != null && metaData.article != null) {
+                        title = metaData.article!!.name
                     }
-                    if(requestCountDown!=null) {
-                        requestCountDown.countDown();
-                    }
-                    if(onSuccess!=null){
-                        onSuccess.accept(pins);
-                    }
-                }, error -> Log.e(TAG, "nErrorResponse: Failed"));
+                    pins[i].title = title
+                }
+                requestCountDown?.countDown()
+                onSuccess?.accept(pins)
+            }) { error: VolleyError? -> Log.e(TAG, "nErrorResponse: Failed") }
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-
+        queue.add(stringRequest)
     }
 
+    companion object {
+        private const val PIN_BASE_URL = "https://widgets.pinterest.com/v3/pidgets/"
+        private const val TAG = "PinterestAPI"
+        private val gson = Gson()
+        private var instance: PinterestAPI? = null
+        fun getInstance(context: Context): PinterestAPI? {
+            if (instance == null) {
+                instance = PinterestAPI(context)
+            }
+            return instance
+        }
+    }
+
+    init {
+        queue = Volley.newRequestQueue(context)
+    }
 }

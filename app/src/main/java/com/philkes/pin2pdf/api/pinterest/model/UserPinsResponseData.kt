@@ -1,18 +1,5 @@
-package com.philkes.pin2pdf.api.pinterest.model;
+package com.philkes.pin2pdf.api.pinterest.model
 
-import java.util.List;
-
-public class UserPinsResponseData {
-    private List<PinResponse> pins;
-
-    public UserPinsResponseData() {
-    }
-
-    public List<PinResponse> getPins() {
-        return pins;
-    }
-
-    public void setPins(List<PinResponse> pins) {
-        this.pins=pins;
-    }
+class UserPinsResponseData {
+    var pins: List<PinResponse>? = null
 }
