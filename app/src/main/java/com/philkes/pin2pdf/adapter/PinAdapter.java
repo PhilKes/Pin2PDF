@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,6 +54,8 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
         private static final int IMG_SIZE=50;
         private final TextView titleView;
         private final ImageView imgView;
+        private final Button btnOpen;
+        private final ImageButton btnNotes;
 
         private final Context context;
 
@@ -64,6 +68,8 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
             // Define click listener for the ViewHolder's View
             titleView=view.findViewById(R.id.pin_title);
             imgView=view.findViewById(R.id.pin_img);
+            btnOpen=view.findViewById(R.id.open_recipe);
+            btnNotes=view.findViewById(R.id.open_notes);
             // TODO On image click show Fullscreen Image
            /* imgView.setOnClickListener((v)->{
                     if(isImageFitToScreen) {
@@ -81,7 +87,7 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
 
         public void updateData(PinModel pin) {
             titleView.setText(pin.getTitle());
-            titleView.setOnClickListener(view1 -> {
+            btnOpen.setOnClickListener(view1 -> {
                 String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
                 System.out.println("Open in Chrome: "+link);
                 Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));

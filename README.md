@@ -10,6 +10,8 @@
 * Add Search Bar Functionality
 * Open Fullscreen image on click
 * Error Handling
+* If no PDF Links found, convert Instructions HTML to PDF as store locally
+* Option to add Notes to a Recipe (Note Icon in ListView)
 
 
 ## Done

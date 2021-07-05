@@ -1,20 +1,19 @@
 package com.philkes.pin2pdf.storage.local.entity;
 
-import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.TypeConverters;
+import androidx.room.PrimaryKey;
 
 import com.philkes.pin2pdf.model.PinModel;
 
-import java.util.Date;
-
-@Entity(primaryKeys={"pinId", "board"})
+@Entity
 public class Pin {
+    @PrimaryKey(autoGenerate=true)
+    public Integer id;
 
-    @NonNull
+    @ColumnInfo
     public String pinId;
-    @NonNull
+    @ColumnInfo
     public String board;
 
     @ColumnInfo

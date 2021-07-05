@@ -1,31 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="horizontal"
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        android:layout_height="wrap_content">
 
-<com.github.siyamed.shapeimageview.RoundedImageView
-        android:id="@+id/pin_img"
-        android:layout_width="50pt"
-        android:layout_height="50pt"
-        android:src="@drawable/example_pin_img"
-        app:siRadius="6dp"
-        app:siBorderWidth="1dp"
-        app:siBorderColor="#000"
-        app:siSquare="true"
-        android:adjustViewBounds="true"
-        android:scaleType="centerCrop"
-        />
+    <com.google.android.material.card.MaterialCardView
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="8dp">
 
-<TextView
-        android:id="@+id/pin_title"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Djuvec Reis eine köstliche Reis Beilage - Zu Faul Zum Kochen?"
-        android:textAlignment="center"
-        android:gravity="center"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <com.github.siyamed.shapeimageview.RoundedImageView
+                    android:id="@+id/pin_img"
+                    android:layout_width="50pt"
+                    android:layout_height="50pt"
+                    android:src="@drawable/example_pin_img"
+                    app:siRadius="6dp"
+                    app:siBorderWidth="1dp"
+                    app:siBorderColor="#000"
+                    app:siSquare="true"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+            <TextView
+                    android:id="@+id/pin_title"
+                    android:layout_width="0dp"
+                    android:layout_height="70dp"
+                    android:padding="4dp"
+                    android:text="Djuvec Reis eine köstliche Reis Beilage - Zu Faul Zum Kochen?"
+                    android:textAlignment="center"
+                    android:textSize="8pt"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/pin_img"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="8dp" />
+
+            <Button
+                    android:id="@+id/open_recipe"
+                    android:layout_width="120dp"
+                    android:layout_height="50dp"
+                    android:textColor="@color/colorAccentText"
+                    android:textStyle="bold"
+                    android:text="Open"
+                    android:drawableLeft="@drawable/ic_open"
+                    app:layout_constraintTop_toBottomOf="@+id/pin_title"
+                    android:src="@drawable/ic_open"
+                    android:backgroundTint="@color/colorAccent"
+                    app:layout_constraintStart_toEndOf="@+id/pin_img"
+                    android:layout_marginStart="42dp"
+                    android:tint="@color/colorAccentText"
+                    app:layout_constraintBottom_toBottomOf="@+id/pin_img" />
+
+            <ImageButton
+                    android:id="@+id/open_notes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    app:layout_constraintTop_toBottomOf="@+id/pin_title"
+                    app:layout_constraintStart_toEndOf="@+id/open_recipe"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:src="@drawable/ic_note"
+                    android:scaleType="fitCenter"
+                    android:backgroundTint="@color/colorAccent"
+                    android:tint="@color/colorAccentText"
+                    android:layout_marginStart="16dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/open_recipe" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
 </LinearLayout>

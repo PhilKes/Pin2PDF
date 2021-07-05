@@ -90,6 +90,7 @@ public class BoardObjectFragment extends Fragment {
                         if(!missingPins.isEmpty()) {
                             api.scrapePDFLinks(missingPins);
                             api.requestPinsInfos(missingPins, (fetchedPins) -> {
+                                fetchedPins.forEach(pin-> pin.setBoard(boardName));
                                 dbService.insertPins(fetchedPins, () -> {
                                     // Reload all Pins from Local DB
                                     dbService.loadPins(pins.stream().map(PinModel::getId).collect(Collectors.toList()),

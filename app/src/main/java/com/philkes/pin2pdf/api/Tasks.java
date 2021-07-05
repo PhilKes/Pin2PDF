@@ -35,6 +35,9 @@ public class Tasks {
                     if(!urlValidator.isValid(recipeLink)) {
                         throw new Exception("Invalid URL found: " + recipeLink);
                     }
+                    if(recipeLink.contains("youtube.com")) {
+                        throw new Exception("Recipe from YouTube skipped: " + recipeLink);
+                    }
                     doc=Jsoup.connect(recipeLink)
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
                             .get();
@@ -63,6 +66,37 @@ public class Tasks {
                           /*  System.out.println("ORIGINAL LINK: " + pin.getLink());
                             System.out.println("LINK: " + pdfLink);
                             System.out.println("Fused Link :" + (pdfLink));*/
+                    }
+                }
+                if(pdfLink==null) {
+                    // TODO Try to Scrape Instructions HTML
+                    // and save as .pdf locally
+                    // Try to find recipe anchor tag
+                    Elements recipeAnchors=doc
+                            .select("[id~=.*recipe.*]");
+                    if(recipeAnchors.isEmpty()) {
+                        recipeAnchors=doc
+                                .select("[id~=.*rezept.*]");
+                    }
+                    if(recipeAnchors.isEmpty()) {
+                        recipeAnchors=doc
+                                .select("[id~=.*print.*]");
+                    }
+                    if(!recipeAnchors.isEmpty()) {
+                        Element bestAnchor=null;
+                        for(Element anchor : recipeAnchors) {
+                            String t=anchor.attr("id");
+                            if(!t.contains("button") && !t.contains("btn") && !t.contains("link") && !t.contains("logo") && !t.contains("icon")) {
+                                bestAnchor=anchor;
+                                break;
+                            }
+                        }
+                        if(bestAnchor!=null) {
+                            String tag=bestAnchor
+                                    .attr("id");
+                            System.out.println("Tag found: " + tag);
+                            pdfLink=recipeLink + "#" + tag;
+                        }
                     }
                 }
                 System.out.println("PDFLink: " + pdfLink);
