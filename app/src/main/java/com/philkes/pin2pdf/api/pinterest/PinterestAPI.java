@@ -17,6 +17,7 @@ import com.philkes.pin2pdf.api.Tasks;
 import com.philkes.pin2pdf.api.pinterest.model.PinsInfosResponse;
 import com.philkes.pin2pdf.api.pinterest.model.RichMetaData;
 import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse;
+import com.philkes.pin2pdf.storage.local.entity.Pin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +87,7 @@ public class PinterestAPI {
                         // Counter to wait until requestPinsInfos is done
                         Integer requestCount=1;
                         CountDownLatch requestCountDown=new CountDownLatch(requestCount);
-                        requestPinsInfos(boardPins,null,requestCountDown);
+                        requestPinsInfos(boardPins, null, requestCountDown);
                         new Thread(() -> {
                             try {
                                 requestCountDown.await();
@@ -110,16 +111,54 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
+    public static class PDFScrapeResult {
+        private String pdfLink;
+        private String title;
+
+        public PDFScrapeResult(String pdfLink, String title) {
+            this.pdfLink=pdfLink;
+            this.title=title;
+        }
+
+        public PDFScrapeResult() {
+        }
+
+        public String getPdfLink() {
+            return pdfLink;
+        }
+
+        public void setPdfLink(String pdfLink) {
+            this.pdfLink=pdfLink;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title=title;
+        }
+    }
+
     /**
-     * Try to scrape PDF/Print Links from original Recipe Link
+     * Try to scrape PDF/Print Links + better Title from original Recipe Link
      **/
     public void scrapePDFLinks(List<PinModel> boardPins) {
         try {
-            List<String> pdfLinks=new Tasks.ScrapePDFLinksTask()
+            List<PDFScrapeResult> pdfLinks=new Tasks.ScrapePDFLinksTask()
                     .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
                     .get();
             for(int i=0; i<boardPins.size(); i++) {
-                boardPins.get(i).setPdfLink(pdfLinks.get(i));
+                PDFScrapeResult res=pdfLinks.get(i);
+                if(res==null) {
+                    continue;
+                }
+                PinModel pin=boardPins.get(i);
+                pin.setPdfLink(res.getPdfLink());
+                //if(pin.getTitle() == null || pin.getTitle().isEmpty()|| pin.getTitle().equals(" ")){
+                if(res.getTitle()!=null && !res.getTitle().isEmpty() && !res.getTitle().equals(" ")) {
+                    pin.setTitle(res.getTitle());
+                }
             }
         }
         catch(ExecutionException | InterruptedException e) {
@@ -139,16 +178,23 @@ public class PinterestAPI {
                     PinsInfosResponse responseObj=gson.fromJson(response, PinsInfosResponse.class);
                     for(int i=0; i<pins.size(); i++) {
                         RichMetaData metaData=responseObj.getData().get(i).getRichMetaData();
-                        String title=pins.get(i).getTitle();
+                        PinModel pin=pins.get(i);
+                        String title=pin.getTitle();
                         if(metaData!=null && metaData.getArticle()!=null) {
                             title=metaData.getArticle().getName();
                         }
-                        pins.get(i).setTitle(title);
+                        if(title==null || title.equals(" ") || title.isEmpty()) {
+                            System.out.println();
+                        }
+                        else {
+                            System.out.println(title);
+                        }
+                        pin.setTitle(title);
                     }
                     if(requestCountDown!=null) {
                         requestCountDown.countDown();
                     }
-                    if(onSuccess!=null){
+                    if(onSuccess!=null) {
                         onSuccess.accept(pins);
                     }
                 }, error -> Log.e(TAG, "nErrorResponse: Failed"));

@@ -3,6 +3,8 @@ package com.philkes.pin2pdf.api;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+
 import org.apache.commons.validator.routines.UrlValidator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -18,12 +20,12 @@ import static com.philkes.pin2pdf.Util.getUrlDomainName;
 
 public class Tasks {
 
-    public static class ScrapePDFLinksTask extends AsyncTask<List<String>, Void, List<String>> {
+    public static class ScrapePDFLinksTask extends AsyncTask<List<String>, Void, List<PinterestAPI.PDFScrapeResult>> {
 
         private static final String TAG="GetPinsTask";
 
-        protected List<String> doInBackground(List<String>... urls) {
-            List<String> pdfLinks=new ArrayList<>();
+        protected List<PinterestAPI.PDFScrapeResult> doInBackground(List<String>... urls) {
+            List<PinterestAPI.PDFScrapeResult> pdfLinks=new ArrayList<>();
 
             for(int i=0; i<urls[0].size(); i++) {
                 String recipeLink=urls[0].get(i);
@@ -100,12 +102,19 @@ public class Tasks {
                     }
                 }
                 System.out.println("PDFLink: " + pdfLink);
-                pdfLinks.add(pdfLink);
+                // Get Title from HTML
+                String title=null;
+                Element titleHtml=doc
+                        .select("title").first();
+                if(titleHtml!=null) {
+                    title=titleHtml.text();
+                }
+                pdfLinks.add(new PinterestAPI.PDFScrapeResult(pdfLink, title));
             }
             return pdfLinks;
         }
 
-        protected void onPostExecute(List<String> result) {
+        protected void onPostExecute(List<PinterestAPI.PDFScrapeResult> result) {
             Log.d(TAG, "ScrapeRecipePDFLinks done");
         }
     }

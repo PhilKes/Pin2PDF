@@ -62,9 +62,9 @@ public class BoardObjectFragment extends Fragment {
         pinListView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager listViewManager=new LinearLayoutManager(view.getContext());
         pinListView.setLayoutManager(listViewManager);
-        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(pinListView.getContext(),
+/*        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(pinListView.getContext(),
                 listViewManager.getOrientation());
-        pinListView.addItemDecoration(dividerItemDecoration);
+        pinListView.addItemDecoration(dividerItemDecoration);*/
     }
 
     private void loadPins() {
