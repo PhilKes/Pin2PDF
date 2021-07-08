@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
-            android:layout_height="wrap_content"
+            android:layout_height="140dp"
             android:layout_width="match_parent"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            app:cardElevation="4dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -46,33 +48,35 @@
 
             <Button
                     android:id="@+id/open_recipe"
-                    android:layout_width="120dp"
+                    android:layout_width="0dp"
                     android:layout_height="50dp"
                     android:textColor="@color/colorAccentText"
                     android:textStyle="bold"
+                    android:textSize="8pt"
                     android:text="Open"
                     android:drawableLeft="@drawable/ic_open"
                     app:layout_constraintTop_toBottomOf="@+id/pin_title"
                     android:src="@drawable/ic_open"
                     android:backgroundTint="@color/colorAccent"
-                    app:layout_constraintStart_toEndOf="@+id/pin_img"
-                    android:layout_marginStart="42dp"
                     android:tint="@color/colorAccentText"
-                    app:layout_constraintBottom_toBottomOf="@+id/pin_img" />
+                    app:layout_constraintBottom_toBottomOf="@+id/pin_img"
+                    app:layout_constraintStart_toEndOf="@+id/pin_img"
+                    app:layout_constraintEnd_toStartOf="@+id/open_notes"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp" />
 
             <ImageButton
                     android:id="@+id/open_notes"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="50dp"
                     app:layout_constraintTop_toBottomOf="@+id/pin_title"
-                    app:layout_constraintStart_toEndOf="@+id/open_recipe"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:src="@drawable/ic_note"
                     android:scaleType="fitCenter"
                     android:backgroundTint="@color/colorAccent"
                     android:tint="@color/colorAccentText"
-                    android:layout_marginStart="16dp"
-                    app:layout_constraintBottom_toBottomOf="@+id/open_recipe" />
+                    app:layout_constraintBottom_toBottomOf="@+id/open_recipe"
+                    android:layout_marginEnd="12dp" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
