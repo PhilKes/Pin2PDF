@@ -28,25 +28,29 @@ public class Pin {
     @ColumnInfo
     public String pdfLink;
 
+    @ColumnInfo
+    public String note;
+
 
     public Pin() {
     }
 
-    private Pin(String pinId, String title, String imgUrl, String link, String pdfLink, String board) {
+    private Pin(String pinId, String title, String imgUrl, String link, String pdfLink, String board,String note) {
         this.pinId=pinId;
         this.title=title;
         this.imgUrl=imgUrl;
         this.link=link;
         this.pdfLink=pdfLink;
         this.board=board;
+        this.note=note;
     }
 
     public PinModel toModel() {
-        return new PinModel(title, imgUrl, link, pdfLink, board, pinId);
+        return new PinModel(title, imgUrl, link, pdfLink, board, pinId,note);
     }
 
     public static Pin fromModel(PinModel model) {
         return new Pin(model.getId(), model.getTitle(), model.getImgUrl(),
-                model.getLink(), model.getPdfLink(), model.getBoard());
+                model.getLink(), model.getPdfLink(), model.getBoard(),model.getNote());
     }
 }

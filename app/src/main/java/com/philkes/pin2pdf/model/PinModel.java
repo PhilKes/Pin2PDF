@@ -9,13 +9,17 @@ public class PinModel {
     private String pdfLink;
     private String board;
     private String id;
+    private String note;
 
-    public PinModel(String title, String imgUrl, String link, String pdfLink,String board, String id) {
+    public PinModel(String title, String imgUrl, String link,
+                    String pdfLink,String board, String id,
+                    String note) {
         setTitle(title);
         setImgUrl(imgUrl);
         setLink(link);
         setPdfLink(pdfLink);
         setBoard(board);
+        setNote(note);
         this.id=id;
     }
 
@@ -67,5 +71,13 @@ public class PinModel {
 
     public void setId(String id) {
         this.id=id;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note=note;
     }
 }

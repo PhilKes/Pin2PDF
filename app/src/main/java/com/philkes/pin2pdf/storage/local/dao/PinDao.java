@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.philkes.pin2pdf.storage.local.entity.Pin;
 
@@ -23,5 +24,8 @@ public interface PinDao {
 
     @Delete
     void delete(Pin pin);
+
+    @Update
+    void update(Pin pin);
 
 }

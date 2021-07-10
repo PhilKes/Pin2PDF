@@ -61,12 +61,12 @@ public class PinResponse {
     }
 
     public PinModel toPin() {
-        return new PinModel(getDescription(), getSmallImg(), getLink(), null, getBoardName(), getId());
+        return new PinModel(getDescription(), getSmallImg(), getLink(), null, getBoardName(), getId(),null);
 
     }
 
     public PinModel toBoardPin(String boardName) {
-        return new PinModel(getDescription(), getSmallImg(), getLink(), null, boardName, getId());
+        return new PinModel(getDescription(), getSmallImg(), getLink(), null, boardName, getId(),null);
 
     }
 }

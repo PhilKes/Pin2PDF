@@ -39,12 +39,22 @@ public class DBService {
         });
     }
 
-    public void insertPins(List<PinModel> pins,Runnable onSuccess) {
-        execute(() ->{
+    public void insertPins(List<PinModel> pins, Runnable onSuccess) {
+        execute(() -> {
             pinDao.insertAll(
-                pins.stream().map(Pin::fromModel).collect(Collectors.toList()));
-            if(onSuccess!=null)
+                    pins.stream().map(Pin::fromModel).collect(Collectors.toList()));
+            if(onSuccess!=null) {
                 onSuccess.run();
+            }
+        });
+    }
+
+    public void updatePin(PinModel pin, Runnable onSuccess) {
+        execute(() -> {
+            pinDao.update(Pin.fromModel(pin));
+            if(onSuccess!=null) {
+                onSuccess.run();
+            }
         });
     }
 
