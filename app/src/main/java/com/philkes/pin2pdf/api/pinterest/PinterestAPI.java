@@ -170,7 +170,7 @@ public class PinterestAPI {
      * Get detailed Infos of Pins (fill Title if present)
      **/
     public void requestPinsInfos(List<PinModel> pins, Consumer<List<PinModel>> onSuccess, CountDownLatch requestCountDown) {
-        String idsStr=pins.stream().map(PinModel::getId).collect(Collectors.joining(","));
+        String idsStr=pins.stream().map(PinModel::getPinId).collect(Collectors.joining(","));
         String url=PIN_BASE_URL + "pins/info/?pin_ids=" + idsStr;
         // Request a string response from the provided URL.
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,

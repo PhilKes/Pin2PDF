@@ -22,23 +22,24 @@ public class Tasks {
 
     public static class ScrapePDFLinksTask extends AsyncTask<List<String>, Void, List<PinterestAPI.PDFScrapeResult>> {
 
+        private static final UrlValidator urlValidator=new UrlValidator();
         private static final String TAG="GetPinsTask";
 
         protected List<PinterestAPI.PDFScrapeResult> doInBackground(List<String>... urls) {
             List<PinterestAPI.PDFScrapeResult> pdfLinks=new ArrayList<>();
 
+            // Try to scrape PDF/Print Link from all Recipe Webpages
             for(int i=0; i<urls[0].size(); i++) {
                 String recipeLink=urls[0].get(i);
                 String pdfLink=null;
-
                 Document doc=null;
                 try {
-                    UrlValidator urlValidator=new UrlValidator();
                     if(!urlValidator.isValid(recipeLink)) {
                         throw new Exception("Invalid URL found: " + recipeLink);
                     }
                     if(recipeLink.contains("youtube.com")) {
-                        throw new Exception("Recipe from YouTube skipped: " + recipeLink);
+                        pdfLinks.add(null);
+                        continue;
                     }
                     doc=Jsoup.connect(recipeLink)
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
@@ -71,8 +72,6 @@ public class Tasks {
                     }
                 }
                 if(pdfLink==null) {
-                    // TODO Try to Scrape Instructions HTML
-                    // and save as .pdf locally
                     // Try to find recipe anchor tag
                     Elements recipeAnchors=doc
                             .select("[id~=.*recipe.*]");
@@ -101,7 +100,6 @@ public class Tasks {
                         }
                     }
                 }
-                System.out.println("PDFLink: " + pdfLink);
                 // Get Title from HTML
                 String title=null;
                 Element titleHtml=doc
@@ -109,6 +107,10 @@ public class Tasks {
                 if(titleHtml!=null) {
                     title=titleHtml.text();
                 }
+                if(!urlValidator.isValid(pdfLink)) {
+                    pdfLink=null;
+                }
+                System.out.println("PDFLink: " + pdfLink);
                 pdfLinks.add(new PinterestAPI.PDFScrapeResult(pdfLink, title));
             }
             return pdfLinks;

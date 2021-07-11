@@ -3,24 +3,26 @@ package com.philkes.pin2pdf.model;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public class PinModel {
+    private Integer id;
+    private String pinId;
     private String title;
     private String imgUrl;
     private String link;
     private String pdfLink;
     private String board;
-    private String id;
     private String note;
 
-    public PinModel(String title, String imgUrl, String link,
-                    String pdfLink,String board, String id,
+    public PinModel(Integer id, String pinId, String title, String imgUrl, String link,
+                    String pdfLink, String board,
                     String note) {
+        this.id=id;
+        this.pinId=pinId;
         setTitle(title);
         setImgUrl(imgUrl);
         setLink(link);
         setPdfLink(pdfLink);
         setBoard(board);
         setNote(note);
-        this.id=id;
     }
 
     public String getBoard() {
@@ -30,7 +32,7 @@ public class PinModel {
     public void setBoard(String board) {
         this.board=StringEscapeUtils.unescapeHtml3(board)
                 .replace("/", "")
-                .replace(" ","-");
+                .replace(" ", "-");
     }
 
     public String getTitle() {
@@ -65,11 +67,11 @@ public class PinModel {
         this.pdfLink=pdfLink;
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id=id;
     }
 
@@ -79,5 +81,13 @@ public class PinModel {
 
     public void setNote(String note) {
         this.note=note;
+    }
+
+    public String getPinId() {
+        return pinId;
+    }
+
+    public void setPinId(String pinId) {
+        this.pinId=pinId;
     }
 }

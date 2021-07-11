@@ -79,12 +79,12 @@ public class BoardObjectFragment extends Fragment {
             DBService dbService=DBService.getInstance(getContext());
             // Try to load all Pins from local DB
             dbService.loadPins(
-                    pins.stream().map(PinModel::getId).collect(Collectors.toList()),
+                    pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
                     (loadedPins) -> {
                         System.out.println("Loaded Pins: " + loadedPins.size());
                         // Check if any Pins weren't loaded from local DB
                         List<PinModel> missingPins=new ArrayList<>(pins);
-                        missingPins.removeIf(pinModel -> loadedPins.stream().anyMatch(pin -> pin.getId().equals(pinModel.getId())));
+                        missingPins.removeIf(pinModel -> loadedPins.stream().anyMatch(pin -> pin.getPinId().equals(pinModel.getPinId())));
                         System.out.println("Missing Pins: " + missingPins.size());
                         // Fetch missing Pins from Pinterest API/Scraper
                         if(!missingPins.isEmpty()) {
@@ -93,7 +93,7 @@ public class BoardObjectFragment extends Fragment {
                                 fetchedPins.forEach(pin-> pin.setBoard(boardName));
                                 dbService.insertPins(fetchedPins, () -> {
                                     // Reload all Pins from Local DB
-                                    dbService.loadPins(pins.stream().map(PinModel::getId).collect(Collectors.toList()),
+                                    dbService.loadPins(pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
                                             (allPins) -> {
                                                 updatePinsList(allPins);
                                                 progress.dismiss();

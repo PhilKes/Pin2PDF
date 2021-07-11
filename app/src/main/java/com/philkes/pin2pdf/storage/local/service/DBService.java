@@ -30,7 +30,7 @@ public class DBService {
 
     public void loadPins(List<String> pinIds, Consumer<List<PinModel>> onSuccess) {
         execute(() -> {
-            List<PinModel> pins=pinDao.loadAllByIds(pinIds)
+            List<PinModel> pins=pinDao.loadAllByPinIds(pinIds)
                     .stream()
                     .map(Pin::toModel).collect(Collectors.toList());
             if(onSuccess!=null) {
