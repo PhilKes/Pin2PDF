@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @Override
+/*    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.search_bar, menu);
@@ -37,21 +37,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 searchView.clearFocus();
-             /*   if(list.contains(query)){
+             *//*   if(list.contains(query)){
                     adapter.getFilter().filter(query);
                 }else{
                     Toast.makeText(MainActivity.this, "No Match found",Toast.LENGTH_LONG).show();
-                }*/
+                }*//*
                 return false;
 
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                //TODO pinListViewAdapter.getFilter().filter(newText);
+               // pinListViewAdapter.getFilter().filter(newText);
                 return false;
             }
         });
         return super.onCreateOptionsMenu(menu);
-    }
+    }*/
 }

@@ -2,23 +2,21 @@ package com.philkes.pin2pdf.fragment.boards;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.adapter.PinAdapter;
-import com.philkes.pin2pdf.model.PinModel;
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.model.PinModel;
 import com.philkes.pin2pdf.storage.local.service.DBService;
 
 import java.util.ArrayList;
@@ -36,7 +34,8 @@ public class BoardObjectFragment extends Fragment {
 
     private RecyclerView pinListView;
     private RecyclerView.Adapter pinListViewAdapter;
-    private List<PinModel> pinsList;
+    private List<PinModel> currentPins;
+    private List<PinModel> allPins;
     private String boardName;
 
     @Override
@@ -54,10 +53,11 @@ public class BoardObjectFragment extends Fragment {
         loadPins();
     }
 
+
     private void setupUI(View view) {
-        pinsList=new ArrayList<>();
+        currentPins=new ArrayList<>();
         pinListView=view.findViewById(R.id.pins_list);
-        pinListViewAdapter=new PinAdapter(pinsList);
+        pinListViewAdapter=new PinAdapter(currentPins);
         pinListView.setAdapter(pinListViewAdapter);
         pinListView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager listViewManager=new LinearLayoutManager(view.getContext());
@@ -90,12 +90,14 @@ public class BoardObjectFragment extends Fragment {
                         if(!missingPins.isEmpty()) {
                             api.scrapePDFLinks(missingPins);
                             api.requestPinsInfos(missingPins, (fetchedPins) -> {
-                                fetchedPins.forEach(pin-> pin.setBoard(boardName));
+                                fetchedPins.forEach(pin -> pin.setBoard(boardName));
                                 dbService.insertPins(fetchedPins, () -> {
                                     // Reload all Pins from Local DB
                                     dbService.loadPins(pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
                                             (allPins) -> {
                                                 updatePinsList(allPins);
+                                                // Store all available Pins separately for filtering
+                                                this.allPins=allPins;
                                                 progress.dismiss();
                                             });
                                 });
@@ -103,6 +105,7 @@ public class BoardObjectFragment extends Fragment {
                         }
                         else {
                             updatePinsList(loadedPins);
+                            this.allPins=loadedPins;
                             progress.dismiss();
                         }
                     });
@@ -112,10 +115,21 @@ public class BoardObjectFragment extends Fragment {
     }
 
     private void updatePinsList(List<PinModel> pins) {
-        pinsList.clear();
-        pinsList.addAll(pins);
+        currentPins.clear();
+        currentPins.addAll(pins);
         getActivity().runOnUiThread(() -> {
             pinListViewAdapter.notifyDataSetChanged();
         });
+    }
+
+    public void setFilter(String filter) {
+        List<PinModel> filteredPins=new ArrayList<>();
+        // Find all Pins that match Filter from allPins
+        for(PinModel pin : allPins) {
+            if(pin.getTitle().toLowerCase().contains(filter.toLowerCase())) {
+                filteredPins.add(pin);
+            }
+        }
+        updatePinsList(filteredPins);
     }
 }

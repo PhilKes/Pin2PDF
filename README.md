@@ -5,13 +5,10 @@
 
 
 ## TODO
-* List with Material Cards
 * DO not let Smartphone shutdown screen
-* Add Search Bar Functionality
 * Open Fullscreen image on click
-* Error Handling
-* If no PDF Links found, convert Instructions HTML to PDF as store locally
-* Option to add Notes to a Recipe (Note Icon in ListView)
+* Better Error Handling
+* Star-Rating for each Recipe
 
 
 ## Done
@@ -21,5 +18,8 @@
 * Separate Boards of User in Tabs
 * Loading Animations
 * Store tagged Recipes/Pins in local database
-* Scrape .PDF/Print links of each recipe
+* Scrape .PDF/Print links of each recipe's website
 * Check if Pins were removed
+* List with Material Cards
+* Option to add Notes to a Recipe in ListView
+* Add Search Bar Functionality
