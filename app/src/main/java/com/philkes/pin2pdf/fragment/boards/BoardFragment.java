@@ -25,18 +25,21 @@ import android.view.ViewGroup;
 
 import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.api.pinterest.model.BoardResponse;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD;
+import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD_ID;
 
 /**
  * Fragment containing ViewPager with Tabs for each Boards
  */
 public class BoardFragment extends Fragment {
-    public static final String USER="cryster0416";
+    // TODO Use Settings menu to set the user
+    public static final String USER="philk23214";
     // When requested, this adapter returns a DemoObjectFragment,
     // representing an object in the collection.
     BoardPagerAdapter boardCollectionAdapter;
@@ -107,10 +110,10 @@ public class BoardFragment extends Fragment {
 // Since this is an object collection, use a FragmentStatePagerAdapter,
 // and NOT a FragmentPagerAdapter.
 class BoardPagerAdapter extends FragmentPagerAdapter {
-    List<String> boards;
+    List<BoardResponse> boards;
     List<BoardObjectFragment> fragments;
 
-    public BoardPagerAdapter(FragmentManager fm, List<String> boards) {
+    public BoardPagerAdapter(FragmentManager fm, List<BoardResponse> boards) {
         super(fm);
         this.boards=boards;
         this.fragments= new ArrayList<>();
@@ -129,7 +132,8 @@ class BoardPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int i) {
         BoardObjectFragment fragment=new BoardObjectFragment();
         Bundle args=new Bundle();
-        args.putString(ARG_BOARD, boards.get(i));
+        args.putString(ARG_BOARD, boards.get(i).getName());
+        args.putString(ARG_BOARD_ID, boards.get(i).getId());
         fragment.setArguments(args);
         fragments.set(i,fragment);
         return fragment;
@@ -142,7 +146,7 @@ class BoardPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return boards.get(position);
+        return boards.get(position).getName();
     }
 }
 

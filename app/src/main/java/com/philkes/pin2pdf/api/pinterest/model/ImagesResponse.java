@@ -4,10 +4,10 @@ import com.google.gson.annotations.SerializedName;
 
 public class ImagesResponse {
 
-    @SerializedName("237x")
+    @SerializedName("236x")
     private ImageResponse imgSmall;
 
-    @SerializedName("564x")
+    @SerializedName("474x")
     private ImageResponse imgBig;
 
     public ImagesResponse() {

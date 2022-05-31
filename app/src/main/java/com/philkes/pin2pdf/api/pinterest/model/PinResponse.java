@@ -1,10 +1,13 @@
 package com.philkes.pin2pdf.api.pinterest.model;
 
+import com.google.gson.annotations.SerializedName;
 import com.philkes.pin2pdf.model.PinModel;
 
 public class PinResponse {
     private ImagesResponse images;
     private String description;
+    @SerializedName("grid_title")
+    private String gridTitle;
     private String link;
     private String id;
     private BoardResponse board;
@@ -56,17 +59,25 @@ public class PinResponse {
         return images.getImgSmall().getUrl();
     }
 
+    public String getGridTitle() {
+        return gridTitle;
+    }
+
+    public void setGridTitle(String gridTitle) {
+        this.gridTitle=gridTitle;
+    }
+
     public String getBoardName() {
         return board!=null ? board.getName() : null;
     }
 
     public PinModel toPin() {
-        return new PinModel(null, getId(), getDescription(), getSmallImg(), getLink(), null, getBoardName(), null);
+        return new PinModel(null, getId(), getGridTitle(), getSmallImg(), getLink(), null, getBoardName(), null);
 
     }
 
     public PinModel toBoardPin(String boardName) {
-        return new PinModel(null, getId(), getDescription(), getSmallImg(), getLink(), null, boardName, null);
+        return new PinModel(null, getId(), getGridTitle(), getSmallImg(), getLink(), null, boardName, null);
 
     }
 }

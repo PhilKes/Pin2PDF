@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,12 +32,15 @@ import static com.philkes.pin2pdf.fragment.boards.BoardFragment.USER;
  */
 public class BoardObjectFragment extends Fragment {
     public static final String ARG_BOARD="board";
+    public static final String ARG_BOARD_ID="boardId";
 
+    private TextView amountPinsTextView;
     private RecyclerView pinListView;
     private RecyclerView.Adapter pinListViewAdapter;
     private List<PinModel> currentPins;
     private List<PinModel> allPins;
     private String boardName;
+    private String boardId;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -48,6 +52,7 @@ public class BoardObjectFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         Bundle args=getArguments();
         boardName=args.getString(ARG_BOARD);
+        boardId=args.getString(ARG_BOARD_ID);
 
         setupUI(view);
         loadPins();
@@ -56,15 +61,13 @@ public class BoardObjectFragment extends Fragment {
 
     private void setupUI(View view) {
         currentPins=new ArrayList<>();
+        amountPinsTextView=view.findViewById(R.id.amount_pins_text);
         pinListView=view.findViewById(R.id.pins_list);
         pinListViewAdapter=new PinAdapter(currentPins);
         pinListView.setAdapter(pinListViewAdapter);
         pinListView.setItemAnimator(new DefaultItemAnimator());
         LinearLayoutManager listViewManager=new LinearLayoutManager(view.getContext());
         pinListView.setLayoutManager(listViewManager);
-/*        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(pinListView.getContext(),
-                listViewManager.getOrientation());
-        pinListView.addItemDecoration(dividerItemDecoration);*/
     }
 
     private void loadPins() {
@@ -74,7 +77,7 @@ public class BoardObjectFragment extends Fragment {
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
         PinterestAPI api=PinterestAPI.getInstance(getContext());
-        api.requestPinsOfBoard(USER, boardName, false, false, (pins) -> {
+        api.requestPinsOfBoard(boardId, false, (pins) -> {
             System.out.println("All Pins: " + pins.size());
             DBService dbService=DBService.getInstance(getContext());
             // Try to load all Pins from local DB
@@ -89,19 +92,16 @@ public class BoardObjectFragment extends Fragment {
                         // Fetch missing Pins from Pinterest API/Scraper
                         if(!missingPins.isEmpty()) {
                             api.scrapePDFLinks(missingPins);
-                            api.requestPinsInfos(missingPins, (fetchedPins) -> {
-                                fetchedPins.forEach(pin -> pin.setBoard(boardName));
-                                dbService.insertPins(fetchedPins, () -> {
-                                    // Reload all Pins from Local DB
-                                    dbService.loadPins(pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
-                                            (allPins) -> {
-                                                updatePinsList(allPins);
-                                                // Store all available Pins separately for filtering
-                                                this.allPins=allPins;
-                                                progress.dismiss();
-                                            });
-                                });
-                            }, null);
+                            dbService.insertPins(missingPins, () -> {
+                                // Reload all Pins from Local DB
+                                dbService.loadPins(pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
+                                        (allPins) -> {
+                                            updatePinsList(allPins);
+                                            // Store all available Pins separately for filtering
+                                            this.allPins=allPins;
+                                            progress.dismiss();
+                                        });
+                            });
                         }
                         else {
                             updatePinsList(loadedPins);
@@ -118,6 +118,7 @@ public class BoardObjectFragment extends Fragment {
         currentPins.clear();
         currentPins.addAll(pins);
         getActivity().runOnUiThread(() -> {
+            this.amountPinsTextView.setText(String.format("Pins: %d",allPins.size()));
             pinListViewAdapter.notifyDataSetChanged();
         });
     }
