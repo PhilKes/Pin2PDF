@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
  * Methods to call the Pinterest JSON API for access to user's Boards + Pins
  */
 public class PinterestAPI {
-    private static final String PIN_GET_BOARDS_URL="https://www.pinterest.com/_ngjs/resource/BoardsResource/get/?data={\"options\":{\"username\":\"%s\",\"page_size\":100,\"prepend\":false}}";
-    private static final String PIN_PINS_OF_BOARD_URL="https://www.pinterest.de/resource/BoardFeedResource/get/?data={\"options\":{\"board_id\":\"%s\",\"field_set_key\":\"react_grid_pin\",\"page_size\":100}}";
+    private static final String PIN_GET_BOARDS_URL="https://www.pinterest.com/_ngjs/resource/BoardsResource/get/?data={\"options\":{\"username\":\"%s\",\"page_size\":250,\"prepend\":false}}";
+    private static final String PIN_PINS_OF_BOARD_URL="https://www.pinterest.de/resource/BoardFeedResource/get/?data={\"options\":{\"board_id\":\"%s\",\"field_set_key\":\"react_grid_pin\",\"page_size\":250}}";
 
     private static final String TAG="PinterestAPI";
 
