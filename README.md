@@ -1,9 +1,12 @@
 #  Pin2PDF <img src="/doc/pin2pdf_logo.png" height="40"> 
 
+<img src="./doc/showcase.png" width="300">
+
 * Show Pinterest Boards of your Account
 * Page Size of 250 per Board
 * Quick Links to .pdf/print Sites
 * Take additional Notes for Pins
+
 
 
 ## TODO
