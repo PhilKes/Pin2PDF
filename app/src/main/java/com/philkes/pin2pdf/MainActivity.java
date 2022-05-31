@@ -1,16 +1,14 @@
 package com.philkes.pin2pdf;
 
 import android.os.Bundle;
-
-import androidx.core.view.MenuItemCompat;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
-
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
+import com.philkes.pin2pdf.fragment.boards.BoardFragment;
 import com.philkes.pin2pdf.storage.local.service.DBService;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,36 +20,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         DBService.getInstance(this);
         PinterestAPI.getInstance(this);
-        //setupUI();
-        // loadPins();
     }
 
-
-/*    @Override
+    /**
+     * Show menu item for editing the username + clearing all data
+     *
+     * @param menu
+     * @return
+     */
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
-        inflater.inflate(R.menu.search_bar, menu);
-        MenuItem searchViewItem=menu.findItem(R.id.app_bar_search);
-        final SearchView searchView=(SearchView) MenuItemCompat.getActionView(searchViewItem);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
-             *//*   if(list.contains(query)){
-                    adapter.getFilter().filter(query);
-                }else{
-                    Toast.makeText(MainActivity.this, "No Match found",Toast.LENGTH_LONG).show();
-                }*//*
-                return false;
-
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-               // pinListViewAdapter.getFilter().filter(newText);
-                return false;
-            }
+        inflater.inflate(R.menu.options, menu);
+        MenuItem usernameEditItem=menu.findItem(R.id.option_username_edit);
+        usernameEditItem.setOnMenuItemClickListener((item) -> {
+            Util.showUsernameInputDialog(this, (username) -> {
+                // Reload Fragment to load new user
+                ((BoardFragment) getSupportFragmentManager().findFragmentById(R.id.boardFragment)).loadUser(username);
+            });
+            return true;
         });
-        return super.onCreateOptionsMenu(menu);
-    }*/
+        MenuItem clearPinItem=menu.findItem(R.id.option_clear_pin_data);
+        clearPinItem.setOnMenuItemClickListener((item) -> {
+            DBService.getInstance(this).clearAll();
+            Util.showUsernameInputDialog(this, (username) -> {
+                // Reload Fragment to load new user
+                ((BoardFragment) getSupportFragmentManager().findFragmentById(R.id.boardFragment)).loadUser(username);
+            });
+            return true;
+        });
+        return true;
+    }
 }

@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyEditTextStyle" parent="android:Widget.EditText">
+        <item name="android:background">@android:drawable/editbox_background_normal</item>
+    </style>
+
 </resources>

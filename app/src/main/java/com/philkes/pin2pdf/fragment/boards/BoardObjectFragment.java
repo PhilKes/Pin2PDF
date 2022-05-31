@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.philkes.pin2pdf.fragment.boards.BoardFragment.USER;
 
 /**
  * Fragments inside of BoardFragment

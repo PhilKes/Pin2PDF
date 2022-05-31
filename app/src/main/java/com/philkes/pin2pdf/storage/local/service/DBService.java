@@ -61,4 +61,10 @@ public class DBService {
     private void execute(Runnable runnable) {
         AppDatabase.databaseWriteExecutor.execute(runnable);
     }
+
+    public void clearAll() {
+        execute(()->{
+            pinDao.clear();
+        });
+    }
 }

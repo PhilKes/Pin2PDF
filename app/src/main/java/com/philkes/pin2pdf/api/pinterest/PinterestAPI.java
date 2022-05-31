@@ -7,6 +7,7 @@ import androidx.core.util.Consumer;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
@@ -50,7 +51,7 @@ public class PinterestAPI {
     /**
      * Fetch Boards of given User from Pinterest JSON API
      */
-    public void requestBoardsOfUser(String user, Consumer<List<BoardResponse>> onSuccess) {
+    public void requestBoardsOfUser(String user, Consumer<List<BoardResponse>> onSuccess, Consumer<VolleyError> onError) {
         String url=String.format(PIN_GET_BOARDS_URL, user);
 
         StringRequest stringRequest=new StringRequest(Request.Method.GET, url,
@@ -63,7 +64,7 @@ public class PinterestAPI {
                         onSuccess.accept(boardResponses);
                     }
 
-                }, error -> Log.e(TAG, String.format("nErrorResponse: Failed: %s", error)));
+                }, onError::accept);
         queue.add(stringRequest);
     }
 

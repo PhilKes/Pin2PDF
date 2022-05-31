@@ -1,48 +1,49 @@
 package com.philkes.pin2pdf.fragment.boards;
 
+import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD;
+import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD_ID;
+
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.google.android.material.tabs.TabLayout;
-
-import androidx.appcompat.widget.SearchView;
-import androidx.core.view.MenuItemCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-
+import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuItemCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
+import com.google.android.material.tabs.TabLayout;
 import com.philkes.pin2pdf.R;
+import com.philkes.pin2pdf.Util;
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI;
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD;
-import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD_ID;
 
 /**
  * Fragment containing ViewPager with Tabs for each Boards
  */
 public class BoardFragment extends Fragment {
-    // TODO Use Settings menu to set the user
-    public static final String USER="philk23214";
-    // When requested, this adapter returns a DemoObjectFragment,
-    // representing an object in the collection.
+    private static final String TAG= "BoardFragment";
     BoardPagerAdapter boardCollectionAdapter;
+    TabLayout tabLayout;
     ViewPager viewPager;
 
     @Nullable
@@ -56,28 +57,49 @@ public class BoardFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        viewPager=view.findViewById(R.id.boardPager);
+        tabLayout=view.findViewById(R.id.tab_layout);
+
+        SharedPreferences sharedPref=getActivity().getSharedPreferences(
+                getString(R.string.app_name), Context.MODE_PRIVATE);
+        String username=sharedPref.getString(getResources().getString(R.string.key_user_name), null);
+        if(username==null) {
+            Util.showUsernameInputDialog(getActivity(),(newUsername)-> loadUser(newUsername));
+        }else {
+            loadUser(username);
+        }
+    }
+
+    public void loadUser(String username) {
         ProgressDialog progress=new ProgressDialog(getContext());
         progress.setTitle("Loading your Pinterest Boards");
         progress.setMessage("Please wait...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
         PinterestAPI api=PinterestAPI.getInstance(getContext());
-        api.requestBoardsOfUser(USER, (boards) -> {
+        api.requestBoardsOfUser(username, (boards) -> {
             getActivity().runOnUiThread(() -> {
                 boardCollectionAdapter=new BoardPagerAdapter(getChildFragmentManager(),
                         boards);
-                viewPager=view.findViewById(R.id.boardPager);
                 viewPager.setAdapter(boardCollectionAdapter);
                 viewPager.setOffscreenPageLimit(boards.size());
-                TabLayout tabLayout=view.findViewById(R.id.tab_layout);
                 tabLayout.setupWithViewPager(viewPager);
                 tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
                 tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
                 progress.dismiss();
             });
-
+        }, (error)->{
+            Log.e(TAG, String.format("nErrorResponse: Failed: %s", error));
+            AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+            builder.setTitle("Loading User failed!");
+            builder.setMessage(String.format("The '%s' Pinterest User's boards could not be loaded",username));
+            builder.setPositiveButton("Ok", (dialogInterface, i) -> Util.showUsernameInputDialog(getContext(), this::loadUser));
+            builder.setCancelable(true);
+            builder.show();
         });
     }
+
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -103,7 +125,7 @@ public class BoardFragment extends Fragment {
                 return false;
             }
         });
-        super.onCreateOptionsMenu(menu,inflater);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 }
 
@@ -116,14 +138,14 @@ class BoardPagerAdapter extends FragmentPagerAdapter {
     public BoardPagerAdapter(FragmentManager fm, List<BoardResponse> boards) {
         super(fm);
         this.boards=boards;
-        this.fragments= new ArrayList<>();
+        this.fragments=new ArrayList<>();
         for(int i=0; i<boards.size(); i++) {
             this.fragments.add(null);
         }
     }
 
-    public void setFilter(String filter){
-        for(BoardObjectFragment fragment :fragments) {
+    public void setFilter(String filter) {
+        for(BoardObjectFragment fragment : fragments) {
             fragment.setFilter(filter);
         }
     }
@@ -135,7 +157,7 @@ class BoardPagerAdapter extends FragmentPagerAdapter {
         args.putString(ARG_BOARD, boards.get(i).getName());
         args.putString(ARG_BOARD_ID, boards.get(i).getId());
         fragment.setArguments(args);
-        fragments.set(i,fragment);
+        fragments.set(i, fragment);
         return fragment;
     }
 

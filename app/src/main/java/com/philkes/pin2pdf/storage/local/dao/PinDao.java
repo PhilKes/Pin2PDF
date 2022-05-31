@@ -25,7 +25,11 @@ public interface PinDao {
     @Delete
     void delete(Pin pin);
 
+    @Query("DELETE FROM Pin")
+    void clear();
+
     @Update
     void update(Pin pin);
+
 
 }
