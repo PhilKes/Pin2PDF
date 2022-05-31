@@ -6,9 +6,11 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.philkes.pin2pdf.R;
@@ -58,6 +61,7 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
      * (custom ViewHolder).
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        private static final String TAG= "PinViewHolder";
         private static final int IMG_SIZE=50;
         private final TextView titleView;
         private final ImageView imgView;
@@ -93,15 +97,14 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
             txtNotes.setInputType(InputType.TYPE_NULL);
 
 
-            // TODO On image click show Fullscreen Image
-           /* imgView.setOnClickListener((v)->{
+/*            imgView.setOnClickListener((v)->{
                     if(isImageFitToScreen) {
                         isImageFitToScreen=false;
-                        imgView.setLayoutParams(new LinearLayout.LayoutParams(IMG_SIZE, IMG_SIZE));
+                        imgView.setLayoutParams(new ConstraintLayout.LayoutParams(IMG_SIZE, IMG_SIZE));
                         imgView.setAdjustViewBounds(true);
                     }else{
                         isImageFitToScreen=true;
-                        imgView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                        imgView.setLayoutParams(new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT));
                         imgView.setScaleType(ImageView.ScaleType.FIT_XY);
                     }
 
@@ -127,12 +130,9 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
         public void updateData(PinModel pin) {
             titleView.setText(pin.getTitle());
             txtNotes.setText(pin.getNote());
-            btnOpen.setOnClickListener(view1 -> {
-                String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
-                System.out.println("Open in Chrome: " + link);
-                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                context.startActivity(browserIntent);
-            });
+
+            titleView.setOnClickListener(view1 -> openInBrowser(pin));
+            btnOpen.setOnClickListener(view1 -> openInBrowser(pin));
             btnNotes.setOnClickListener((v) -> {
                 if(notesEditable) {
                     pin.setNote(txtNotes.getText().toString());
@@ -143,6 +143,13 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
             });
             Picasso.get().load(pin.getImgUrl()).into(imgView);
 
+        }
+
+        private void openInBrowser(PinModel pin) {
+            String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
+            System.out.println("Open in Chrome: " + link);
+            Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+            context.startActivity(browserIntent);
         }
     }
 

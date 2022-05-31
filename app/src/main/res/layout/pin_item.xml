@@ -49,7 +49,7 @@
 
             <EditText
                     android:hint="Add notes to recipe"
-                    android:textSize="5pt"
+                    android:textSize="6pt"
                     android:editable="false"
                     android:inputType="none"
                     android:id="@+id/txt_notes"
@@ -66,7 +66,8 @@
                     android:layout_height="50dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:src="@android:drawable/ic_menu_edit"
-                    android:scaleType="centerCrop"
+                    android:padding="18px"
+                    android:scaleType="centerInside"
                     android:backgroundTint="@color/colorAccent"
                     android:tint="@color/colorAccentText"
                     android:layout_marginEnd="4dp"

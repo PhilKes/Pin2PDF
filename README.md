@@ -6,7 +6,6 @@
 
 ## TODO
 * DO not let Smartphone shutdown screen
-* Open Fullscreen image on click
 * Better Error Handling
 * Star-Rating for each Recipe
 
