@@ -2,6 +2,7 @@ package com.philkes.pin2pdf.fragment.boards;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,8 @@ import java.util.stream.Collectors;
  * A BoardObjectFragment represents 1 Pinterest Board with its Pins (1 Tab)
  */
 public class BoardObjectFragment extends Fragment {
+    private static final String TAG="BoardObjectFragment";
+
     public static final String ARG_BOARD="board";
     public static final String ARG_BOARD_ID="boardId";
 
@@ -71,23 +74,23 @@ public class BoardObjectFragment extends Fragment {
 
     private void loadPins() {
         ProgressDialog progress=new ProgressDialog(getContext());
-        progress.setTitle("Loading Pins of '" + boardName + "'");
-        progress.setMessage("Please wait...");
+        progress.setTitle(String.format(getString(R.string.progress_pins_title), boardName));
+        progress.setMessage(getString(R.string.progress_pins_wait));
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
         PinterestAPI api=PinterestAPI.getInstance(getContext());
         api.requestPinsOfBoard(boardId, false, (pins) -> {
-            System.out.println("All Pins: " + pins.size());
+            Log.d(TAG,String.format("All Pins: %d",pins.size()));
             DBService dbService=DBService.getInstance(getContext());
             // Try to load all Pins from local DB
             dbService.loadPins(
                     pins.stream().map(PinModel::getPinId).collect(Collectors.toList()),
                     (loadedPins) -> {
-                        System.out.println("Loaded Pins: " + loadedPins.size());
+                        Log.d(TAG,String.format("Loaded Pins: %d",  loadedPins.size()));
                         // Check if any Pins weren't loaded from local DB
                         List<PinModel> missingPins=new ArrayList<>(pins);
                         missingPins.removeIf(pinModel -> loadedPins.stream().anyMatch(pin -> pin.getPinId().equals(pinModel.getPinId())));
-                        System.out.println("Missing Pins: " + missingPins.size());
+                        Log.d(TAG,String.format("Missing Pins: %d", missingPins.size()));
                         // Fetch missing Pins from Pinterest API/Scraper
                         if(!missingPins.isEmpty()) {
                             api.scrapePDFLinks(missingPins);
@@ -117,7 +120,7 @@ public class BoardObjectFragment extends Fragment {
         currentPins.clear();
         currentPins.addAll(pins);
         getActivity().runOnUiThread(() -> {
-            this.amountPinsTextView.setText(String.format("Pins: %d",allPins.size()));
+            this.amountPinsTextView.setText(String.format(getString(R.string.amount_pins_text_template),allPins.size()));
             pinListViewAdapter.notifyDataSetChanged();
         });
     }

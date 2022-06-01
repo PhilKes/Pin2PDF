@@ -13,7 +13,6 @@ import com.philkes.pin2pdf.storage.local.service.DBService;
 
 public class MainActivity extends AppCompatActivity {
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,9 +23,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Show menu item for editing the username + clearing all data
-     *
-     * @param menu
-     * @return
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

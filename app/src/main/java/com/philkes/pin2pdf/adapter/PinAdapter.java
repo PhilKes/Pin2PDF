@@ -2,13 +2,7 @@ package com.philkes.pin2pdf.adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-
-import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,8 +13,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.philkes.pin2pdf.R;
 import com.philkes.pin2pdf.model.PinModel;
@@ -30,6 +26,9 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 
+/**
+ * {@link androidx.recyclerview.widget.RecyclerView.Adapter} for ListView of {@link PinModel} with custom {@link ViewGroup}
+ */
 public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
     private List<PinModel> pins;
 
@@ -56,12 +55,8 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
         return pins.size();
     }
 
-    /**
-     * Provide a reference to the type of views that you are using
-     * (custom ViewHolder).
-     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        private static final String TAG= "PinViewHolder";
+        private static final String TAG="PinViewHolder";
         private static final int IMG_SIZE=50;
         private final TextView titleView;
         private final ImageView imgView;
@@ -147,7 +142,7 @@ public class PinAdapter extends RecyclerView.Adapter<PinAdapter.ViewHolder> {
 
         private void openInBrowser(PinModel pin) {
             String link=pin.getPdfLink()!=null ? pin.getPdfLink() : pin.getLink();
-            System.out.println("Open in Chrome: " + link);
+            Log.d(TAG, String.format("Open in Chrome: %s", link));
             Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse(link));
             context.startActivity(browserIntent);
         }

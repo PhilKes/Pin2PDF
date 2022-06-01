@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+/**
+ * Singleton Service to interact with the device's database
+ */
 public class DBService {
     private static DBService instance;
 

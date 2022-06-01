@@ -35,16 +35,6 @@ public class Pin {
     public Pin() {
     }
 
-    private Pin(String pinId, String title, String imgUrl, String link, String pdfLink, String board, String note) {
-        this.pinId=pinId;
-        this.title=title;
-        this.imgUrl=imgUrl;
-        this.link=link;
-        this.pdfLink=pdfLink;
-        this.board=board;
-        this.note=note;
-    }
-
     private Pin(Integer id, String pinId, String title, String imgUrl, String link, String pdfLink, String board, String note) {
         this.id=id;
         this.pinId=pinId;

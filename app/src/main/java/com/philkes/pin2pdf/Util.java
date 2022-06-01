@@ -14,7 +14,9 @@ import java.util.function.Consumer;
 
 public class Util {
 
-
+    /**
+     * Returns the Domain name of the given URL
+     */
     public static String getUrlDomainName(String url) {
         String domainName = new String(url);
 

@@ -2,6 +2,9 @@ package com.philkes.pin2pdf.model;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+/**
+ * DTO Object for {@link com.philkes.pin2pdf.storage.local.entity.Pin} Entity
+ */
 public class PinModel {
     private Integer id;
     private String pinId;

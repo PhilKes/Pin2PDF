@@ -6,10 +6,8 @@ import static com.philkes.pin2pdf.fragment.boards.BoardObjectFragment.ARG_BOARD_
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +15,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragment containing ViewPager with Tabs for each Boards
+ * Fragment containing {@link ViewPager} with Tabs for each Boards
  */
 public class BoardFragment extends Fragment {
     private static final String TAG= "BoardFragment";
@@ -72,8 +69,8 @@ public class BoardFragment extends Fragment {
 
     public void loadUser(String username) {
         ProgressDialog progress=new ProgressDialog(getContext());
-        progress.setTitle("Loading your Pinterest Boards");
-        progress.setMessage("Please wait...");
+        progress.setTitle(getString(R.string.progress_title));
+        progress.setMessage(getString(R.string.progress_wait));
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
         progress.show();
         PinterestAPI api=PinterestAPI.getInstance(getContext());
@@ -91,9 +88,9 @@ public class BoardFragment extends Fragment {
         }, (error)->{
             Log.e(TAG, String.format("nErrorResponse: Failed: %s", error));
             AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
-            builder.setTitle("Loading User failed!");
-            builder.setMessage(String.format("The '%s' Pinterest User's boards could not be loaded",username));
-            builder.setPositiveButton("Ok", (dialogInterface, i) -> Util.showUsernameInputDialog(getContext(), this::loadUser));
+            builder.setTitle(R.string.alert_error_title);
+            builder.setMessage(String.format(getString(R.string.alert_error_msg_template),username));
+            builder.setPositiveButton(R.string.alert_error_btn_positive, (dialogInterface, i) -> Util.showUsernameInputDialog(getContext(), this::loadUser));
             builder.setCancelable(true);
             builder.show();
         });

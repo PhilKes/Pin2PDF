@@ -11,7 +11,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-import com.philkes.pin2pdf.api.Tasks;
+import com.philkes.pin2pdf.api.ScrapePDFLinksTask;
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse;
 import com.philkes.pin2pdf.api.pinterest.model.PinResponse;
 import com.philkes.pin2pdf.api.pinterest.model.UserBoardsResponse;
@@ -96,50 +96,21 @@ public class PinterestAPI {
         queue.add(stringRequest);
     }
 
-    public static class PDFScrapeResult {
-        private String pdfLink;
-        private String title;
-
-        public PDFScrapeResult(String pdfLink, String title) {
-            this.pdfLink=pdfLink;
-            this.title=title;
-        }
-
-        public PDFScrapeResult() {
-        }
-
-        public String getPdfLink() {
-            return pdfLink;
-        }
-
-        public void setPdfLink(String pdfLink) {
-            this.pdfLink=pdfLink;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title=title;
-        }
-    }
-
     /**
-     * Try to scrape PDF/Print Links + better Title from original Recipe Link
+     * Try to scrape PDF/Print Links
      **/
     public void scrapePDFLinks(List<PinModel> boardPins) {
         try {
-            List<PDFScrapeResult> pdfLinks=new Tasks.ScrapePDFLinksTask()
+            List<String> pdfLinks=new ScrapePDFLinksTask()
                     .execute(boardPins.stream().map(PinModel::getLink).collect(Collectors.toList()))
                     .get();
             for(int i=0; i<boardPins.size(); i++) {
-                PDFScrapeResult res=pdfLinks.get(i);
+                String res=pdfLinks.get(i);
                 if(res==null) {
                     continue;
                 }
                 PinModel pin=boardPins.get(i);
-                pin.setPdfLink(res.getPdfLink());
+                pin.setPdfLink(res);
             }
         }
         catch(ExecutionException | InterruptedException e) {
