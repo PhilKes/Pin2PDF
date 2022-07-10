@@ -40,9 +40,8 @@ class PinterestAPI private constructor(context: Context?) {
             Request.Method.GET, url,
             { response: String? ->
                 val responseObj = gson.fromJson(response, UserBoardsResponse::class.java)
-                val boardResponses = responseObj.resource_response!!.data!!.stream()
-                    .sorted(Comparator.comparing { obj: BoardResponse? -> obj!!.name!! })
-                    .collect(Collectors.toList())
+                val boardResponses: List<BoardResponse> =
+                    responseObj.resource_response!!.data!!.sortedBy { it!!.name }.map { it!! }
                 onSuccess?.accept(boardResponses)
             }) { t: VolleyError? -> onError.accept(t) }
         queue.add(stringRequest)
@@ -54,30 +53,26 @@ class PinterestAPI private constructor(context: Context?) {
     fun requestPinsOfBoard(
         boardId: String?,
         scrapePDFlinks: Boolean,
-        consumer: Consumer<List<PinModel?>>?
+        consumer: Consumer<List<PinModel>>?
     ) {
-        val url = String.format(PIN_PINS_OF_BOARD_URL, boardId)
+        val url = PIN_PINS_OF_BOARD_URL.format(boardId)
 
         // Request a string response from the provided URL.
         val stringRequest = StringRequest(
             Request.Method.GET, url,
             { response: String? ->
                 val responseObj = gson.fromJson(response, UserPinsResponse::class.java)
-                val boardPins = responseObj.resourceResponse!!.data!!.stream()
+                val boardPins = responseObj.resourceResponse!!.data!!
                     .filter { pin: PinResponse? -> pin!!.board != null }
                     .map { obj: PinResponse? -> obj!!.toPin() }
-                    .collect(Collectors.toList())
                 // Scrape PDF/Print Links with JSoup
                 if (scrapePDFlinks) {
-                    scrapePDFLinks(boardPins)
+                    scrapePDFLinks(boardPins, consumer)
                 } else {
                     consumer?.accept(boardPins)
                 }
             }) { error: VolleyError? ->
-            Log.e(
-                TAG,
-                String.format("nErrorResponse: Failed: %s", error)
-            )
+            Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
         }
         // Add the request to the RequestQueue.
         queue.add(stringRequest)
@@ -86,15 +81,17 @@ class PinterestAPI private constructor(context: Context?) {
     /**
      * Try to scrape PDF/Print Links
      */
-    fun scrapePDFLinks(boardPins: List<PinModel?>) {
+    fun scrapePDFLinks(boardPins: List<PinModel>, consumer: Consumer<List<PinModel>>?) {
         try {
-            taskRunner.executeAsync(ScrapePDFLinksTask(boardPins.map { obj: PinModel? -> obj?.link })
+            taskRunner.executeAsync(
+                ScrapePDFLinksTask(boardPins.map { obj: PinModel? -> obj?.link })
             ) { pdfLinks ->
                 for (i in boardPins.indices) {
                     val res = pdfLinks[i] ?: continue
                     val pin = boardPins[i]
-                    pin!!.pdfLink = res
+                    pin.pdfLink = res
                 }
+                consumer?.accept(boardPins)
             }
         } catch (e: ExecutionException) {
             e.printStackTrace()
@@ -112,7 +109,7 @@ class PinterestAPI private constructor(context: Context?) {
         private const val TAG = "PinterestAPI"
         private val gson = Gson()
         private var instance: PinterestAPI? = null
-        fun getInstance(context: Context?): PinterestAPI {
+        fun getInstance(context: Context): PinterestAPI {
             if (instance == null) {
                 instance = PinterestAPI(context)
             }

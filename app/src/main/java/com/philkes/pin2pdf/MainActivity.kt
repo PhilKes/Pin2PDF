@@ -22,27 +22,31 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.options, menu)
-        val usernameEditItem = menu.findItem(R.id.option_username_edit)
-        usernameEditItem.setOnMenuItemClickListener { item: MenuItem? ->
-            Util.showUsernameInputDialog(this) { username: String? ->
-                // Reload Fragment to load new user
-                (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
-                    username
-                )
+        with(menu.findItem(R.id.option_username_edit)) {
+            setOnMenuItemClickListener {
+                Util.showUsernameInputDialog(this@MainActivity) { username: String? ->
+                    // Reload Fragment to load new user
+                    (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
+                        username
+                    )
+                }
+                true
             }
-            true
         }
-        val clearPinItem = menu.findItem(R.id.option_clear_pin_data)
-        clearPinItem.setOnMenuItemClickListener { item: MenuItem? ->
-            DBService.getInstance(this).clearAll()
-            Util.showUsernameInputDialog(this) { username: String? ->
-                // Reload Fragment to load new user
-                (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
-                    username
-                )
+
+        with(menu.findItem(R.id.option_clear_pin_data)) {
+            setOnMenuItemClickListener {
+                DBService.getInstance(this@MainActivity).clearAll()
+                Util.showUsernameInputDialog(this@MainActivity) { username: String? ->
+                    // Reload Fragment to load new user
+                    (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
+                        username
+                    )
+                }
+                true
             }
-            true
         }
+
         return true
     }
 }

@@ -12,26 +12,24 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.philkes.pin2pdf.R
 import com.philkes.pin2pdf.adapter.PinAdapter
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.model.PinModel
-import com.philkes.pin2pdf.storage.local.service.DBService.Companion.getInstance
+import com.philkes.pin2pdf.storage.local.service.DBService
 import java.util.*
-import java.util.stream.Collectors
 
 /**
  * Fragments inside of BoardFragment
  * A BoardObjectFragment represents 1 Pinterest Board with its Pins (1 Tab)
  */
 class BoardObjectFragment : Fragment() {
-    private var refreshLayout: SwipeRefreshLayout? = null
-    private var amountPinsTextView: TextView? = null
-    private var pinListView: RecyclerView? = null
-    private var pinListViewAdapter: RecyclerView.Adapter<*>? = null
-    private var currentPins: MutableList<PinModel?> = ArrayList()
-    private var allPins: List<PinModel?>? = ArrayList()
+    private lateinit var refreshLayout: SwipeRefreshLayout
+    private lateinit var amountPinsTextView: TextView
+    private lateinit var pinListView: RecyclerView
+    private lateinit var pinListViewAdapter: RecyclerView.Adapter<*>
+    private var currentPins: MutableList<PinModel> = ArrayList()
+    private var allPins: List<PinModel> = ArrayList()
     private var boardName: String? = null
     private var boardId: String? = null
     override fun onCreateView(
@@ -42,9 +40,10 @@ class BoardObjectFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val args = arguments
-        boardName = args!!.getString(ARG_BOARD)
-        boardId = args.getString(ARG_BOARD_ID)
+        with(arguments!!) {
+            boardName = getString(ARG_BOARD)
+            boardId = getString(ARG_BOARD_ID)
+        }
         setupUI(view)
         loadPins()
     }
@@ -52,54 +51,59 @@ class BoardObjectFragment : Fragment() {
     private fun setupUI(view: View) {
         currentPins = ArrayList()
         amountPinsTextView = view.findViewById(R.id.amount_pins_text)
-        pinListView = view.findViewById(R.id.pins_list)
         pinListViewAdapter = PinAdapter(currentPins)
-        pinListView!!.adapter = pinListViewAdapter
-        pinListView!!.itemAnimator = DefaultItemAnimator()
-        val listViewManager = LinearLayoutManager(view.context)
-        pinListView!!.layoutManager = listViewManager
-        refreshLayout = view.findViewById(R.id.refresh_layout)
-        refreshLayout!!.setOnRefreshListener({
-            loadPins()
-            refreshLayout!!.setRefreshing(false)
-        })
+        pinListView = view.findViewById<RecyclerView?>(R.id.pins_list).apply {
+            adapter = pinListViewAdapter
+            itemAnimator = DefaultItemAnimator()
+            layoutManager = LinearLayoutManager(view.context)
+        }
+        refreshLayout = view.findViewById<SwipeRefreshLayout?>(R.id.refresh_layout).apply {
+            setOnRefreshListener {
+                loadPins()
+                isRefreshing = false
+            }
+        }
     }
 
     private fun loadPins() {
-        val progress = ProgressDialog(context)
-        progress.setTitle(String.format(getString(R.string.progress_pins_title), boardName))
-        progress.setMessage(getString(R.string.progress_pins_wait))
-        progress.setCancelable(false) // disable dismiss by tapping outside of the dialog
-        progress.show()
-        val api: PinterestAPI = PinterestAPI.Companion.getInstance(context)
-        api.requestPinsOfBoard(boardId, false) { pins: List<PinModel?> ->
+        val progress = ProgressDialog(context).apply {
+            setTitle(String.format(getString(R.string.progress_pins_title), boardName))
+            setMessage(getString(R.string.progress_pins_wait))
+            setCancelable(false) // disable dismiss by tapping outside of the dialog
+            show()
+        }
+
+        val api: PinterestAPI = PinterestAPI.getInstance(context!!)
+        api.requestPinsOfBoard(boardId, false) { pins: List<PinModel> ->
             Log.d(TAG, String.format("All Pins: %d", pins.size))
-            val dbService = getInstance(context!!)
+            val dbService = DBService.getInstance(context!!)
             // Try to load all Pins from local DB
-            dbService!!.loadPins(
-                pins.map { obj: PinModel? -> obj!!.pinId }
-            ) { loadedPins: List<PinModel?>? ->
-                Log.d(TAG, String.format("Loaded Pins: %d", loadedPins!!.size))
+            dbService.loadPins(pins.map { obj: PinModel -> obj.pinId!! }) { loadedPins: List<PinModel> ->
+                Log.d(TAG, String.format("Loaded Pins: %d", loadedPins.size))
                 // Check if any Pins weren't loaded from local DB
-                val missingPins: MutableList<PinModel> = ArrayList(pins)
-                missingPins.removeIf { pinModel: PinModel? ->
-                    loadedPins.stream()
-                        .anyMatch { pin: PinModel? -> pin!!.pinId == pinModel!!.pinId }
-                }
+                val missingPins: List<PinModel> =
+                    ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { pinModel.pinId == it.pinId } }
                 Log.d(TAG, String.format("Missing Pins: %d", missingPins.size))
                 // Fetch missing Pins from Pinterest API/Scraper
-                if (!missingPins.isEmpty()) {
-                    api.scrapePDFLinks(missingPins)
-                    dbService.insertPins(missingPins, Runnable {
-                        // Reload all Pins from Local DB
-                        dbService.loadPins(
-                            pins.map { obj: PinModel? -> obj!!.pinId }) { allPins: List<PinModel?>? ->
-                            updatePinsList(allPins)
-                            // Store all available Pins separately for filtering
-                            this.allPins = allPins
-                            progress.dismiss()
+                if (missingPins.isNotEmpty()) {
+                    activity!!.runOnUiThread {
+                        progress.setMessage(getString(R.string.progress_pins_scraping))
+                    }
+                    api.scrapePDFLinks(missingPins) { updatedPins ->
+                        dbService.insertPins(updatedPins) {
+                            // Reload all Pins from Local DB
+                            dbService.loadPins(
+                                pins.map { obj: PinModel -> obj.pinId!! }) { allPins: List<PinModel> ->
+                                updatePinsList(allPins)
+                                // Store all available Pins separately for filtering
+                                this.allPins = allPins
+                                activity!!.runOnUiThread {
+                                    progress.dismiss()
+                                }
+                            }
                         }
-                    })
+                    }
+
                 } else {
                     updatePinsList(loadedPins)
                     allPins = loadedPins
@@ -109,21 +113,23 @@ class BoardObjectFragment : Fragment() {
         }
     }
 
-    private fun updatePinsList(pins: List<PinModel?>?) {
-        currentPins.clear()
-        currentPins.addAll(pins!!)
+    private fun updatePinsList(pins: List<PinModel>) {
+        with(currentPins) {
+            clear()
+            addAll(pins)
+        }
         activity!!.runOnUiThread {
-            amountPinsTextView!!.text =
-                String.format(getString(R.string.amount_pins_text_template), allPins!!.size)
-            pinListViewAdapter!!.notifyDataSetChanged()
+            amountPinsTextView.text =
+                String.format(getString(R.string.amount_pins_text_template), allPins.size)
+            pinListViewAdapter.notifyDataSetChanged()
         }
     }
 
     fun setFilter(filter: String) {
-        val filteredPins: MutableList<PinModel?> = ArrayList()
+        val filteredPins: MutableList<PinModel> = ArrayList()
         // Find all Pins that match Filter from allPins
-        for (pin in allPins!!) {
-            if (pin!!.title!!.lowercase(Locale.getDefault())
+        for (pin in allPins) {
+            if (pin.title!!.lowercase(Locale.getDefault())
                     .contains(filter.lowercase(Locale.getDefault()))
             ) {
                 filteredPins.add(pin)

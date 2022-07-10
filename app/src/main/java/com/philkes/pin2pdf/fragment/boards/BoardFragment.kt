@@ -51,42 +51,49 @@ class BoardFragment : Fragment() {
     }
 
     fun loadUser(username: String?) {
-        val progress = ProgressDialog(context)
-        progress.setTitle(getString(R.string.progress_title))
-        progress.setMessage(getString(R.string.progress_wait))
-        progress.setCancelable(false) // disable dismiss by tapping outside of the dialog
-        progress.show()
-        val api: PinterestAPI = PinterestAPI.Companion.getInstance(context)
-        api.requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
+        val progress = ProgressDialog(context).apply {
+            setTitle(getString(R.string.progress_title))
+            setMessage(getString(R.string.progress_wait))
+            setCancelable(false) // disable dismiss by tapping outside of the dialog
+            show()
+        }
+        PinterestAPI.getInstance(context!!)
+            .requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
             activity!!.runOnUiThread {
                 boardCollectionAdapter = BoardPagerAdapter(
                     childFragmentManager,
                     boards
                 )
-                viewPager!!.adapter = boardCollectionAdapter
-                viewPager!!.offscreenPageLimit = boards.size
-                tabLayout!!.setupWithViewPager(viewPager)
-                tabLayout!!.tabGravity = TabLayout.GRAVITY_CENTER
-                tabLayout!!.tabMode = TabLayout.MODE_SCROLLABLE
+                viewPager!!.apply {
+                    adapter = boardCollectionAdapter
+                    offscreenPageLimit = boards.size
+                }
+                tabLayout!!.apply {
+                    setupWithViewPager(viewPager)
+                    tabGravity = TabLayout.GRAVITY_CENTER
+                    tabMode = TabLayout.MODE_SCROLLABLE
+                }
                 progress.dismiss()
             }
         }) { error: VolleyError? ->
             Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle(R.string.alert_error_title)
-            builder.setMessage(
-                String.format(
-                    getString(R.string.alert_error_msg_template),
-                    username
+            with(AlertDialog.Builder(context)) {
+                setTitle(R.string.alert_error_title)
+                setMessage(
+                    String.format(
+                        getString(R.string.alert_error_msg_template),
+                        username
+                    )
                 )
-            )
-            builder.setPositiveButton(R.string.alert_error_btn_positive) { dialogInterface: DialogInterface?, i: Int ->
-                showUsernameInputDialog(
-                    context!!
-                ) { username: String? -> loadUser(username) }
+                setPositiveButton(R.string.alert_error_btn_positive) { dialogInterface: DialogInterface?, i: Int ->
+                    showUsernameInputDialog(
+                        context!!
+                    ) { username: String? -> loadUser(username) }
+                }
+                setCancelable(true)
+                show()
             }
-            builder.setCancelable(true)
-            builder.show()
+
         }
     }
 
@@ -97,11 +104,7 @@ class BoardFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchView.clearFocus()
-                /*   if(list.contains(query)){
-                    adapter.getFilter().filter(query);
-                }else{
-                    Toast.makeText(MainActivity.this, "No Match found",Toast.LENGTH_LONG).show();
-                }*/return false
+                return false
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
@@ -129,9 +132,12 @@ class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) 
 
     override fun getItem(i: Int): Fragment {
         val fragment = BoardObjectFragment()
-        val args = Bundle()
-        args.putString(BoardObjectFragment.Companion.ARG_BOARD, boards[i]!!.name)
-        args.putString(BoardObjectFragment.Companion.ARG_BOARD_ID, boards[i]!!.id)
+        val args = Bundle().apply {
+            boards[i]!!.let{
+                putString(BoardObjectFragment.ARG_BOARD, it.name)
+                putString(BoardObjectFragment.ARG_BOARD_ID, it.id)
+            }
+        }
         fragment.arguments = args
         fragments[i] = fragment
         return fragment

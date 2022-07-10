@@ -9,7 +9,7 @@ interface PinDao {
     val all: List<Pin?>?
 
     @Query("SELECT * FROM pin WHERE pinId IN (:pinIds) ORDER BY pinId DESC")
-    fun loadAllByPinIds(pinIds: List<String?>?): List<Pin?>
+    fun loadAllByPinIds(pinIds: List<String>): List<Pin>
 
     @Insert
     fun insertAll(pins: List<Pin>?)

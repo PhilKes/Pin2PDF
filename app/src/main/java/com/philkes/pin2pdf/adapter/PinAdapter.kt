@@ -20,7 +20,7 @@ import com.squareup.picasso.Picasso
 /**
  * [androidx.recyclerview.widget.RecyclerView.Adapter] for ListView of [PinModel] with custom [ViewGroup]
  */
-class PinAdapter(private val pins: List<PinModel?>) :
+class PinAdapter(private val pins: List<PinModel>) :
     RecyclerView.Adapter<PinAdapter.ViewHolder>() {
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
@@ -48,34 +48,39 @@ class PinAdapter(private val pins: List<PinModel?>) :
         private var notesEditable = false
         private val dbService: DBService?
         fun updateUI() {
-            if (notesEditable) {
-                // Make txtNotes editable, focused and show Soft Keyboard
-                txtNotes.inputType = InputType.TYPE_CLASS_TEXT
-                btnNotes.setImageDrawable(context.resources.getDrawable(drawable_save))
-                txtNotes.requestFocus()
-                imm.showSoftInput(txtNotes, InputMethodManager.SHOW_IMPLICIT)
-            } else {
-                // Make txtNotes read only + hide Soft Keyboard
-                txtNotes.inputType = InputType.TYPE_NULL
-                btnNotes.setImageDrawable(context.resources.getDrawable(drawable_edit))
-                imm.hideSoftInputFromWindow(txtNotes.windowToken, 0)
+            with(txtNotes) {
+                if (notesEditable) {
+                    // Make txtNotes editable, focused and show Soft Keyboard
+                    inputType = InputType.TYPE_CLASS_TEXT
+                    btnNotes.setImageDrawable(context.resources.getDrawable(drawable_save))
+                    requestFocus()
+                    imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+                } else {
+                    // Make txtNotes read only + hide Soft Keyboard
+                    inputType = InputType.TYPE_NULL
+                    btnNotes.setImageDrawable(context.resources.getDrawable(drawable_edit))
+                    imm.hideSoftInputFromWindow(windowToken, 0)
+                }
             }
         }
 
-        fun updateData(pin: PinModel?) {
-            titleView.text = pin!!.title
-            txtNotes.setText(pin.note)
-            titleView.setOnClickListener { view1: View? -> openInBrowser(pin) }
-            btnOpen.setOnClickListener { view1: View? -> openInBrowser(pin) }
-            btnNotes.setOnClickListener { v: View? ->
-                if (notesEditable) {
-                    pin.note = txtNotes.text.toString()
-                    dbService!!.updatePin(pin!!, null)
+        fun updateData(pin: PinModel) {
+            with(pin){
+                titleView.text = title
+                txtNotes.setText(note)
+                titleView.setOnClickListener { openInBrowser(this) }
+                btnOpen.setOnClickListener { openInBrowser(this) }
+                btnNotes.setOnClickListener {
+                    if (notesEditable) {
+                        note = txtNotes.text.toString()
+                        dbService!!.updatePin(this, null)
+                    }
+                    notesEditable = !notesEditable
+                    updateUI()
                 }
-                notesEditable = !notesEditable
-                updateUI()
+                Picasso.get().load(imgUrl).into(imgView)
             }
-            Picasso.get().load(pin.imgUrl).into(imgView)
+
         }
 
         private fun openInBrowser(pin: PinModel?) {

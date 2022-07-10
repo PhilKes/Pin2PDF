@@ -13,23 +13,18 @@ import java.util.stream.Collectors
  * Singleton Service to interact with the device's database
  */
 class DBService private constructor(private val pinDao: PinDao) {
-    fun loadPins(pinIds: List<String?>?, onSuccess: Consumer<List<PinModel?>?>?) {
+    fun loadPins(pinIds: List<String>, onSuccess: Consumer<List<PinModel>>?) {
         execute {
             val pins = pinDao.loadAllByPinIds(pinIds)
-                .stream()
-                .map { obj: Pin? -> obj!!.toModel() }.collect(Collectors.toList())
+                .map { obj: Pin? -> obj!!.toModel() }
             onSuccess?.accept(pins)
         }
     }
 
-    fun insertPins(pins: MutableList<PinModel>, onSuccess: Runnable?) {
+    fun insertPins(pins: List<PinModel>, onSuccess: Runnable?) {
         execute {
             pinDao.insertAll(
-                pins.stream()
-                    .map { model: PinModel -> Pin.fromModel(model) }
-                    .collect(
-                        Collectors.toList()
-                    )
+                pins.map { model: PinModel -> Pin.fromModel(model) }
             )
             onSuccess?.run()
         }
@@ -43,7 +38,7 @@ class DBService private constructor(private val pinDao: PinDao) {
     }
 
     private fun execute(runnable: Runnable) {
-        AppDatabase.Companion.databaseWriteExecutor.execute(runnable)
+        AppDatabase.databaseWriteExecutor.execute(runnable)
     }
 
     fun clearAll() {
@@ -52,6 +47,7 @@ class DBService private constructor(private val pinDao: PinDao) {
 
     companion object {
         private var instance: DBService? = null
+
         @JvmStatic
         fun getInstance(context: Context): DBService {
             if (instance == null) {
