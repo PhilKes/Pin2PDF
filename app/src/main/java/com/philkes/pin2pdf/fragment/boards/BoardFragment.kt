@@ -19,14 +19,22 @@ import com.philkes.pin2pdf.R
 import com.philkes.pin2pdf.Util.showUsernameInputDialog
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment containing [ViewPager] with Tabs for each Boards
  */
+@AndroidEntryPoint
 class BoardFragment : Fragment() {
-    var boardCollectionAdapter: BoardPagerAdapter? = null
-    var tabLayout: TabLayout? = null
-    var viewPager: ViewPager? = null
+
+    @Inject
+    lateinit var pinterestAPI: PinterestAPI
+
+    lateinit var boardCollectionAdapter: BoardPagerAdapter
+    lateinit var tabLayout: TabLayout
+    lateinit var viewPager: ViewPager
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -39,55 +47,66 @@ class BoardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewPager = view.findViewById(R.id.boardPager)
         tabLayout = view.findViewById(R.id.tab_layout)
-        val sharedPref = activity!!.getSharedPreferences(
+        val sharedPref = requireActivity().getSharedPreferences(
             getString(R.string.app_name), Context.MODE_PRIVATE
         )
         val username = sharedPref.getString(resources.getString(R.string.key_user_name), null)
         if (username == null) {
-            showUsernameInputDialog(activity!!) { newUsername: String? -> loadUser(newUsername) }
+            showUsernameInputDialog(requireActivity()) { newUsername: String? ->
+                loadUser(
+                    newUsername
+                )
+            }
         } else {
             loadUser(username)
         }
     }
 
     fun loadUser(username: String?) {
-        val progress = ProgressDialog(context)
-        progress.setTitle(getString(R.string.progress_title))
-        progress.setMessage(getString(R.string.progress_wait))
-        progress.setCancelable(false) // disable dismiss by tapping outside of the dialog
-        progress.show()
-        val api: PinterestAPI = PinterestAPI.Companion.getInstance(context)
-        api.requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
-            activity!!.runOnUiThread {
-                boardCollectionAdapter = BoardPagerAdapter(
-                    childFragmentManager,
-                    boards
-                )
-                viewPager!!.adapter = boardCollectionAdapter
-                viewPager!!.offscreenPageLimit = boards.size
-                tabLayout!!.setupWithViewPager(viewPager)
-                tabLayout!!.tabGravity = TabLayout.GRAVITY_CENTER
-                tabLayout!!.tabMode = TabLayout.MODE_SCROLLABLE
-                progress.dismiss()
-            }
-        }) { error: VolleyError? ->
-            Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle(R.string.alert_error_title)
-            builder.setMessage(
-                String.format(
-                    getString(R.string.alert_error_msg_template),
-                    username
-                )
-            )
-            builder.setPositiveButton(R.string.alert_error_btn_positive) { dialogInterface: DialogInterface?, i: Int ->
-                showUsernameInputDialog(
-                    context!!
-                ) { username: String? -> loadUser(username) }
-            }
-            builder.setCancelable(true)
-            builder.show()
+        val progress = ProgressDialog(context).apply {
+            setTitle(getString(R.string.progress_title))
+            setMessage(getString(R.string.progress_wait))
+            setCancelable(false) // disable dismiss by tapping outside of the dialog
+            show()
         }
+        pinterestAPI
+            .requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
+                requireActivity().runOnUiThread {
+                    boardCollectionAdapter = BoardPagerAdapter(
+                        childFragmentManager,
+                        boards
+                    )
+                    viewPager.apply {
+                        adapter = boardCollectionAdapter
+                        offscreenPageLimit = boards.size
+                    }
+                    tabLayout.apply {
+                        setupWithViewPager(viewPager)
+                        tabGravity = TabLayout.GRAVITY_CENTER
+                        tabMode = TabLayout.MODE_SCROLLABLE
+                    }
+                    progress.dismiss()
+                }
+            }) { error: VolleyError? ->
+                Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
+                with(AlertDialog.Builder(context)) {
+                    setTitle(R.string.alert_error_title)
+                    setMessage(
+                        String.format(
+                            getString(R.string.alert_error_msg_template),
+                            username
+                        )
+                    )
+                    setPositiveButton(R.string.alert_error_btn_positive) { _: DialogInterface?, _: Int ->
+                        showUsernameInputDialog(
+                            requireContext()
+                        ) { username: String? -> loadUser(username) }
+                    }
+                    setCancelable(true)
+                    show()
+                }
+
+            }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -97,15 +116,11 @@ class BoardFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchView.clearFocus()
-                /*   if(list.contains(query)){
-                    adapter.getFilter().filter(query);
-                }else{
-                    Toast.makeText(MainActivity.this, "No Match found",Toast.LENGTH_LONG).show();
-                }*/return false
+                return false
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                boardCollectionAdapter!!.setFilter(newText)
+                boardCollectionAdapter.setFilter(newText)
                 return false
             }
         })
@@ -119,8 +134,8 @@ class BoardFragment : Fragment() {
 
 // and NOT a FragmentPagerAdapter.
 class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) :
-    FragmentPagerAdapter(fm) {
-    var fragments: MutableList<BoardObjectFragment?>
+    FragmentPagerAdapter(fm!!) {
+    var fragments: MutableList<BoardObjectFragment?> = ArrayList()
     fun setFilter(filter: String) {
         for (fragment in fragments) {
             fragment!!.setFilter(filter)
@@ -129,9 +144,12 @@ class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) 
 
     override fun getItem(i: Int): Fragment {
         val fragment = BoardObjectFragment()
-        val args = Bundle()
-        args.putString(BoardObjectFragment.Companion.ARG_BOARD, boards[i]!!.name)
-        args.putString(BoardObjectFragment.Companion.ARG_BOARD_ID, boards[i]!!.id)
+        val args = Bundle().apply {
+            boards[i]!!.let {
+                putString(BoardObjectFragment.ARG_BOARD, it.name)
+                putString(BoardObjectFragment.ARG_BOARD_ID, it.id)
+            }
+        }
         fragment.arguments = args
         fragments[i] = fragment
         return fragment
@@ -146,7 +164,6 @@ class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) 
     }
 
     init {
-        fragments = ArrayList()
         for (i in boards.indices) {
             fragments.add(null)
         }

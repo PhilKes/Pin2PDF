@@ -1,7 +1,7 @@
 package com.philkes.pin2pdf.api.pinterest.model
 
 import com.google.gson.annotations.SerializedName
-import com.philkes.pin2pdf.model.PinModel
+import com.philkes.pin2pdf.fragment.boards.PinModel
 
 class PinResponse {
     var images: ImagesResponse? = null

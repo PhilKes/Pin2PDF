@@ -1,9 +1,9 @@
-package com.philkes.pin2pdf.model
+package com.philkes.pin2pdf.fragment.boards
 
 import org.apache.commons.lang3.StringEscapeUtils
 
 /**
- * DTO Object for [com.philkes.pin2pdf.storage.local.entity.Pin] Entity
+ * DTO Object for [com.philkes.pin2pdf.storage.database.entity.Pin] Entity
  */
 class PinModel(
     var id: Int?, var pinId: String?, mTitle: String?, mImgUrl: String?, mLink: String?,

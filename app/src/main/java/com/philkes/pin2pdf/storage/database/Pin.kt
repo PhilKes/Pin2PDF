@@ -1,9 +1,9 @@
-package com.philkes.pin2pdf.storage.local.entity
+package com.philkes.pin2pdf.storage.database
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.philkes.pin2pdf.model.PinModel
+import com.philkes.pin2pdf.fragment.boards.PinModel
 
 @Entity
 class Pin {

@@ -1,6 +1,5 @@
 package com.philkes.pin2pdf.api
 
-import android.os.AsyncTask
 import android.util.Log
 import com.philkes.pin2pdf.Util.getUrlDomainName
 import org.apache.commons.validator.routines.UrlValidator
@@ -10,18 +9,18 @@ import org.jsoup.nodes.Element
 import java.util.concurrent.Callable
 
 /**
- * [AsyncTask] to scrape a recipe's PDF/Print Link from a HTML page
+ * Task to scrape a recipe's PDF/Print Link from a HTML page
  */
 class ScrapePDFLinksTask(private val urls: List<String?>) : Callable<List<String?>> {
 
-   override fun call(): List<String?> {
+    override fun call(): List<String?> {
         val pdfLinks: MutableList<String?> = ArrayList()
 
         // Try to scrape PDF/Print Link from all Recipe Webpages
         for (i in urls.indices) {
             var pdfLink: String? = null
             var doc: Document? = null
-            val recipeLink : String
+            val recipeLink: String
             doc = try {
                 if (!urlValidator.isValid(urls[i])) {
                     throw Exception("Invalid URL found: $urls[i]")
@@ -43,12 +42,8 @@ class ScrapePDFLinksTask(private val urls: List<String?>) : Callable<List<String
             val pinsHrefs = doc!!
                 .select("a[href]")
             // Find Link with Text containing "Print" or "Drucken"
-            var pinHref = pinsHrefs
-                .select(":contains(Print)").first()
-            if (pinHref == null) {
-                pinHref = pinsHrefs
-                    .select(":contains(Drucken)").first()
-            }
+            val pinHref = pinsHrefs.select(":contains(Print)").first()
+                ?: pinsHrefs.select(":contains(Drucken)").first()
             if (pinHref != null) {
                 pdfLink = pinHref.attr("href")
                 // Check if found Link is actual link (not e.g. javascript code)
@@ -56,15 +51,13 @@ class ScrapePDFLinksTask(private val urls: List<String?>) : Callable<List<String
                     if (pdfLink == "#" || pdfLink.contains("javascript") || pdfLink.contains("()")) null else pdfLink
                 if (pdfLink != null && pdfLink.startsWith("/")) {
                     pdfLink = "http://" + getUrlDomainName(recipeLink) + pdfLink
-                    /*  System.out.println("ORIGINAL LINK: " + pin.getLink());
-                            System.out.println("LINK: " + pdfLink);
-                            System.out.println("Fused Link :" + (pdfLink));*/
                 }
             }
             if (pdfLink == null) {
                 // Try to find recipe anchor tag
                 var recipeAnchors = doc
                     .select("[id~=.*recipe.*]")
+
                 if (recipeAnchors.isEmpty()) {
                     recipeAnchors = doc
                         .select("[id~=.*rezept.*]")
@@ -77,9 +70,11 @@ class ScrapePDFLinksTask(private val urls: List<String?>) : Callable<List<String
                     var bestAnchor: Element? = null
                     for (anchor in recipeAnchors) {
                         val t = anchor.attr("id")
-                        if (!t.contains("button") && !t.contains("btn") && !t.contains("link") && !t.contains(
-                                "logo"
-                            ) && !t.contains("icon")
+                        if (with(t) {
+                                !contains("button") && !contains("btn") &&
+                                        !contains("link") && !contains("logo") &&
+                                        !contains("icon")
+                            }
                         ) {
                             bestAnchor = anchor
                             break
