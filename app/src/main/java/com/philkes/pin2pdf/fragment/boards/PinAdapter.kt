@@ -33,10 +33,12 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
         return pins.size
     }
 
-    class ViewHolder(view: View, private val onPinUpdated: (PinModel) -> Unit) : RecyclerView.ViewHolder(view) {
+    class ViewHolder(view: View, private val onPinUpdated: (PinModel) -> Unit) :
+        RecyclerView.ViewHolder(view) {
         private val titleView: TextView
         private val imgView: ImageView
         private val btnOpen: Button
+        private val btnOpenPinterestLink: Button
         private val btnNotes: ImageButton
         private val txtNotes: EditText
         private val context: Context
@@ -62,11 +64,13 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
         }
 
         fun updateData(pin: PinModel) {
-            with(pin){
+            with(pin) {
                 titleView.text = title
                 txtNotes.setText(note)
-                titleView.setOnClickListener { openInBrowser(this) }
-                btnOpen.setOnClickListener { openInBrowser(this) }
+                val onClickUrl = this.pdfLink ?: this.link!!
+                titleView.setOnClickListener { openInBrowser(onClickUrl) }
+                btnOpen.setOnClickListener { openInBrowser(onClickUrl) }
+                btnOpenPinterestLink.setOnClickListener { openInBrowser(this.link!!) }
                 btnNotes.setOnClickListener {
                     if (notesEditable) {
                         note = txtNotes.text.toString()
@@ -80,10 +84,9 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
 
         }
 
-        private fun openInBrowser(pin: PinModel?) {
-            val link = if (pin!!.pdfLink != null) pin.pdfLink else pin.link
-            Log.d(TAG, String.format("Open in Chrome: %s", link))
-            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+        private fun openInBrowser(url: String) {
+            Log.d(TAG, String.format("Open in Chrome: %s", url))
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             context.startActivity(browserIntent)
         }
 
@@ -101,6 +104,7 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
             titleView = view.findViewById(R.id.pin_title)
             imgView = view.findViewById(R.id.pin_img)
             btnOpen = view.findViewById(R.id.open_recipe)
+            btnOpenPinterestLink = view.findViewById(R.id.open_pinterest_link)
             btnNotes = view.findViewById(R.id.edit_notes)
             txtNotes = view.findViewById(R.id.txt_notes)
             txtNotes.inputType = InputType.TYPE_NULL
