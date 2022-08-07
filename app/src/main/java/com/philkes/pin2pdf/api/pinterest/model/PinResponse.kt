@@ -18,7 +18,8 @@ class PinResponse {
         get() = if (board != null) board!!.name else null
 
     fun toPin(): PinModel {
-        return PinModel(null, id, gridTitle, smallImg, link, null, boardName, null)
+        val pGridTitle= if(gridTitle=== null || gridTitle!!.isEmpty()) link else gridTitle
+        return PinModel(null, id, pGridTitle, smallImg, link, null, boardName, null)
     }
 
     fun toBoardPin(boardName: String?): PinModel {

@@ -80,7 +80,7 @@
                     android:textColor="@color/colorAccentText"
                     android:textStyle="bold"
                     android:textSize="8pt"
-                    android:text="Show PDF"
+                    android:text="Open"
                     android:drawableLeft="@drawable/ic_pdf"
                     android:src="@drawable/ic_open"
                     android:backgroundTint="@color/colorAccent"

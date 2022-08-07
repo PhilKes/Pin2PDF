@@ -59,4 +59,39 @@ object Util {
         builder.setCancelable(false)
         builder.show()
     }
+    @JvmStatic
+    public fun replaceUmlaut(input: String): String {
+
+        // replace all lower Umlauts
+        var output = input.replace("ü", "ue")
+            .replace("ö", "oe")
+            .replace("ä", "ae")
+            .replace("ß", "ss")
+
+        // first replace all capital Umlauts in a non-capitalized context (e.g. Übung)
+        output = output.replace("Ü(?=[a-zäöüß ])".toRegex(), "Ue")
+            .replace("Ö(?=[a-zäöüß ])".toRegex(), "Oe")
+            .replace("Ä(?=[a-zäöüß ])".toRegex(), "Ae")
+
+        // now replace all the other capital Umlauts
+        output = output.replace("Ü", "UE")
+            .replace("Ö", "OE")
+            .replace("Ä", "AE")
+        return output
+    }
+
+    @JvmStatic
+    public fun convertToCompatibleFileName(input: String): String{
+        return replaceUmlaut(input)
+            .replace(' ','_')
+            .replace('/','-')
+            .replace(":","")
+            .replace(".","")
+            .replace("|","")
+            .replace("&","-")
+            .replace("[^a-zA-Z0-9:]".toRegex(),"")
+            .take(200)
+    }
+
+
 }

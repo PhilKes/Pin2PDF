@@ -88,7 +88,7 @@ class BoardFragment : Fragment() {
                     progress.dismiss()
                 }
             }) { error: VolleyError? ->
-                Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
+                Log.e(TAG, "nErrorResponse: Failed: $error")
                 with(AlertDialog.Builder(context)) {
                     setTitle(R.string.alert_error_title)
                     setMessage(

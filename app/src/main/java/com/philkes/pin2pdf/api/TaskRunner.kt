@@ -9,9 +9,7 @@ import java.util.concurrent.Executors
 /**
  * Helper to run Task s with results async
  */
-class TaskRunner {
-    private val executor: Executor =
-        Executors.newFixedThreadPool(3)
+class TaskRunner(public val executor: Executor) {
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     fun <R> executeAsync(callable: Callable<R>, onComplete: (R) -> Unit) {

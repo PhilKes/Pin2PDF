@@ -3,28 +3,28 @@ package com.philkes.pin2pdf.api.pinterest
 import android.content.Context
 import android.util.Log
 import androidx.core.util.Consumer
+import androidx.fragment.app.FragmentActivity
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.gson.Gson
-import com.philkes.pin2pdf.api.ScrapePDFLinksTask
+import com.philkes.pin2pdf.api.ExtractRecipeToPDFTask
 import com.philkes.pin2pdf.api.TaskRunner
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import com.philkes.pin2pdf.api.pinterest.model.PinResponse
 import com.philkes.pin2pdf.api.pinterest.model.UserBoardsResponse
 import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse
 import com.philkes.pin2pdf.fragment.boards.PinModel
-import java.util.concurrent.ExecutionException
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
 
 /**
  * Methods to call the Pinterest JSON API for access to user's Boards + Pins
  */
-class PinterestAPI constructor(context: Context) {
+class PinterestAPI constructor(val context: Context, ) {
     private val queue: RequestQueue
-
-    private val taskRunner: TaskRunner = TaskRunner()
 
     /**
      * Fetch Boards of given User from Pinterest JSON API
@@ -49,11 +49,7 @@ class PinterestAPI constructor(context: Context) {
     /**
      * Get Pins of the User's given Board with Pinterest API + Scrape PDF Links
      */
-    fun requestPinsOfBoard(
-        boardId: String?,
-        scrapePDFlinks: Boolean,
-        consumer: Consumer<List<PinModel>>?
-    ) {
+    fun requestPinsOfBoard(boardId: String?, consumer: Consumer<List<PinModel>>?) {
         val url = PIN_PINS_OF_BOARD_URL.format(boardId)
 
         // Request a string response from the provided URL.
@@ -62,16 +58,11 @@ class PinterestAPI constructor(context: Context) {
             { response: String? ->
                 val responseObj = gson.fromJson(response, UserPinsResponse::class.java)
                 val boardPins = responseObj.resourceResponse!!.data!!
-                    .filter { pin: PinResponse? -> pin!!.board != null }
+                    .filter { pin: PinResponse? -> pin!!.board != null && pin.link != null }
                     .map { obj: PinResponse? -> obj!!.toPin() }
-                // Scrape PDF/Print Links with JSoup
-                if (scrapePDFlinks) {
-                    scrapePDFLinks(boardPins, consumer)
-                } else {
-                    consumer?.accept(boardPins)
-                }
+                consumer?.accept(boardPins)
             }) { error: VolleyError? ->
-            Log.e(TAG, String.format("nErrorResponse: Failed: %s", error))
+            Log.e(TAG, "nErrorResponse: Failed: $error")
         }
         // Add the request to the RequestQueue.
         queue.add(stringRequest)
@@ -80,23 +71,8 @@ class PinterestAPI constructor(context: Context) {
     /**
      * Try to scrape PDF/Print Links
      */
-    fun scrapePDFLinks(boardPins: List<PinModel>, consumer: Consumer<List<PinModel>>?) {
-        try {
-            taskRunner.executeAsync(
-                ScrapePDFLinksTask(boardPins.map { obj: PinModel? -> obj?.link })
-            ) { pdfLinks ->
-                for (i in boardPins.indices) {
-                    val res = pdfLinks[i] ?: continue
-                    val pin = boardPins[i]
-                    pin.pdfLink = res
-                }
-                consumer?.accept(boardPins)
-            }
-        } catch (e: ExecutionException) {
-            e.printStackTrace()
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
+    fun scrapePDFLinks(boardPins: List<PinModel>): List<PinModel> {
+        return ExtractRecipeToPDFTask(context, boardPins).call();
     }
 
 

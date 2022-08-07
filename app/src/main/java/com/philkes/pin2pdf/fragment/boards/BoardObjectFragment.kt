@@ -1,6 +1,7 @@
 package com.philkes.pin2pdf.fragment.boards
 
 import android.app.ProgressDialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,10 +14,12 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.philkes.pin2pdf.Pin2PDFModule
 import com.philkes.pin2pdf.R
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.storage.database.DBService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -29,6 +32,10 @@ import javax.inject.Inject
 class BoardObjectFragment : Fragment() {
     @Inject
     lateinit var dbService: DBService
+
+    @Inject
+    lateinit var settings: Pin2PDFModule.Settings
+
     @Inject
     lateinit var pinterestAPI: PinterestAPI
 
@@ -48,13 +55,27 @@ class BoardObjectFragment : Fragment() {
         return inflater.inflate(R.layout.board_fragment, container, false)
     }
 
+    var viewSetup = false
+    var pinsLoaded = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with(arguments!!) {
             boardName = getString(ARG_BOARD)
             boardId = getString(ARG_BOARD_ID)
         }
         setupUI(view)
-        loadPins()
+        viewSetup = true;
+        if (userVisibleHint) {
+            loadPins();
+        }
+//        loadPins()
+    }
+
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        if (isVisibleToUser && viewSetup && !pinsLoaded) {
+            loadPins()
+        }
     }
 
     private fun setupUI(view: View) {
@@ -83,38 +104,46 @@ class BoardObjectFragment : Fragment() {
         val progress = ProgressDialog(context).apply {
             setTitle(String.format(getString(R.string.progress_pins_title), boardName))
             setMessage(getString(R.string.progress_pins_wait))
-            setCancelable(false) // disable dismiss by tapping outside of the dialog
+/*           TODO setCancelable(true) // disable dismiss by tapping outside of the dialog
+            setButton(
+                DialogInterface.BUTTON_NEGATIVE,
+                "Cancel"
+            ) { dialogInterface, i ->
+                lifecycleScope.launch {
+                    settings.resetUser(ownerActivity)
+                }
+            };*/
             show()
         }
 
-        pinterestAPI.requestPinsOfBoard(boardId, false) { pins: List<PinModel> ->
-            Log.d(TAG, String.format("All Pins: %d", pins.size))
+        pinterestAPI.requestPinsOfBoard(boardId) { pins: List<PinModel> ->
+            Log.d(TAG, "All Pins: ${pins.size}")
             // Try to load all Pins from local DB
-            lifecycleScope.launch {
+            // important: use Dispatchers.IO to not block the UI Thread
+            lifecycleScope.launch(Dispatchers.IO) {
                 dbService.loadPins(pins.map { obj: PinModel -> obj.pinId!! }) { loadedPins: List<PinModel> ->
-                    Log.d(TAG, String.format("Loaded Pins: %d", loadedPins.size))
+                    Log.d(TAG, "Loaded Pins: ${loadedPins.size}")
                     // Check if any Pins weren't loaded from local DB
                     val missingPins: List<PinModel> =
                         ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { pinModel.pinId == it.pinId } }
-                    Log.d(TAG, String.format("Missing Pins: %d", missingPins.size))
+                    Log.d(TAG, "Missing Pins: ${missingPins.size}")
                     // Fetch missing Pins from Pinterest API/Scraper
                     if (missingPins.isNotEmpty()) {
-                        activity!!.runOnUiThread {
-                            progress.setMessage(getString(R.string.progress_pins_scraping))
-                        }
-                        pinterestAPI.scrapePDFLinks(missingPins) { updatedPins ->
-                            lifecycleScope.launch {
-                                dbService.insertPins(updatedPins) {
-                                    lifecycleScope.launch {
-                                        // Reload all Pins from Local DB
-                                        dbService.loadPins(
-                                            pins.map { obj: PinModel -> obj.pinId!! }) { allPins: List<PinModel> ->
-                                            updatePinsList(allPins)
-                                            // Store all available Pins separately for filtering
-                                            this@BoardObjectFragment.allPins = allPins
-                                            activity!!.runOnUiThread {
-                                                progress.dismiss()
-                                            }
+/*                      TODO  activity!!.runOnUiThread {
+                            progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${missingPins.size} Pins")
+                        }*/
+                        val updatedPins = pinterestAPI.scrapePDFLinks(missingPins)
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            dbService.insertPins(updatedPins) {
+                                lifecycleScope.launch {
+                                    // Reload all Pins from Local DB
+                                    dbService.loadPins(
+                                        pins.map { obj: PinModel -> obj.pinId!! }) { allPins: List<PinModel> ->
+                                        updatePinsList(allPins)
+                                        // Store all available Pins separately for filtering
+                                        this@BoardObjectFragment.allPins = allPins
+                                        activity!!.runOnUiThread {
+                                            progress.dismiss()
                                         }
                                     }
                                 }
@@ -129,6 +158,8 @@ class BoardObjectFragment : Fragment() {
                 }
             }
         }
+
+        pinsLoaded = true;
     }
 
     private fun updatePinsList(pins: List<PinModel>) {

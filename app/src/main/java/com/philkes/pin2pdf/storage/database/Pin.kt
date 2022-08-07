@@ -3,6 +3,7 @@ package com.philkes.pin2pdf.storage.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.philkes.pin2pdf.Util.convertToCompatibleFileName
 import com.philkes.pin2pdf.fragment.boards.PinModel
 
 @Entity
@@ -66,8 +67,9 @@ class Pin {
 
     companion object {
         fun fromModel(model: PinModel): Pin {
+            val title = if(model.title !=null && model.title!!.isNotEmpty()) model.title!! else model.link!!
             return Pin(
-                model.id, model.pinId, model.title, model.imgUrl,
+                model.id, model.pinId, title, model.imgUrl,
                 model.link, model.pdfLink, model.board, model.note
             )
         }

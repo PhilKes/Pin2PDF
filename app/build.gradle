@@ -8,6 +8,7 @@ plugins{
     id 'kotlin-kapt'
 }
 android {
+
     compileSdkVersion 30
     buildToolsVersion "29.0.3"
 
@@ -30,6 +31,13 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions{
+        pickFirst 'META-INF/LICENSE-LGPL-3.txt'
+        pickFirst 'META-INF/DEPENDENCIES'
+        pickFirst 'META-INF/LICENSE-W3C-TEST'
+        pickFirst 'META-INF/LICENSE-LGPL-2.1.txt'
     }
 
 }
@@ -71,6 +79,9 @@ dependencies {
 
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
 
+    implementation 'com.tom-roush:pdfbox-android:2.0.25.0'
 
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-jdk8
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '1.6.1'
 
 }

@@ -10,9 +10,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
+import com.philkes.pin2pdf.BuildConfig
 import com.philkes.pin2pdf.R
 import com.squareup.picasso.Picasso
+import java.io.File
 
 /**
  * [androidx.recyclerview.widget.RecyclerView.Adapter] for ListView of [PinModel] with custom [ViewGroup]
@@ -69,7 +72,7 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
                 txtNotes.setText(note)
                 val onClickUrl = this.pdfLink ?: this.link!!
                 titleView.setOnClickListener { openInBrowser(onClickUrl) }
-                btnOpen.setOnClickListener { openInBrowser(onClickUrl) }
+                btnOpen.setOnClickListener { if(onClickUrl.startsWith("http")) openInBrowser(onClickUrl) else openPdfFile(onClickUrl) }
                 btnOpenPinterestLink.setOnClickListener { openInBrowser(this.link!!) }
                 btnNotes.setOnClickListener {
                     if (notesEditable) {
@@ -85,10 +88,49 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
         }
 
         private fun openInBrowser(url: String) {
-            Log.d(TAG, String.format("Open in Chrome: %s", url))
+            Log.d(TAG, "Open in Chrome: $url")
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            browserIntent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_ACTIVITY_NO_HISTORY
+            );
             context.startActivity(browserIntent)
         }
+
+        private fun openPdfFile(filename: String) {
+            val file = File(context.filesDir, filename.substring(filename.lastIndexOf('/')))
+            Log.d(TAG, "Open PDF File: $file")
+            if (file.exists()) {
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(
+                        FileProvider.getUriForFile(
+                            context,
+                            BuildConfig.APPLICATION_ID + ".provider",
+                            file
+                        ),
+                        "application/pdf"
+                    )
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.startActivity(this)
+                }
+            } else {
+                Log.e(TAG, "File $file does not exist!")
+            }
+        }
+
+/*
+        private fun openPdfFile(url: String) {
+            Log.d(TAG, String.format("Open Pdf Chrome: %s", url))
+            val pdfIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://docs.google.com/gview?embedded=true&url=file://data/data/com.philkes.pin2pdf/files/817684876070151523.pdf"))
+            pdfIntent.type = "application/pdf"
+            pdfIntent.addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_ACTIVITY_NO_HISTORY);
+            val intent = Intent.createChooser(pdfIntent, "Open File")
+            context.startActivity(intent)
+        }
+*/
 
         companion object {
             private const val TAG = "PinViewHolder"
