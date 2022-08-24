@@ -1,19 +1,15 @@
 #  Pin2PDF <img src="/doc/pin2pdf_logo.png" height="40"> 
 
-<img src="./doc/showcase.png" width="300">
+<img src="./doc/showcase.gif" width="300">
 
 * Show Pinterest Boards of your Account
 * Page Size of 250 per Board
-* Quick Links to .pdf/print Sites
+* Automatic download of the recipe as .PDF File
 * Take additional Notes for Pins
 
 
-
 ## TODO
-* DO not let Smartphone shutdown screen
-* Better Error Handling
 * Star-Rating for each Recipe
-
 
 ## Done
 * RecyclerView of Pins with Image + Title
@@ -27,3 +23,5 @@
 * List with Material Cards
 * Option to add Notes to a Recipe in ListView
 * Add Search Bar Functionality
+* Download/Print recipes to local .PDF Files
+* Favorites List
