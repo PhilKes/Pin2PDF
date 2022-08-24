@@ -2,6 +2,7 @@ package com.philkes.pin2pdf.fragment.boards
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.InputType
 import android.util.Log
@@ -22,11 +23,17 @@ import java.io.File
  */
 class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (PinModel) -> Unit) :
     RecyclerView.Adapter<PinAdapter.ViewHolder>() {
+
+    override fun getItemViewType(position: Int): Int {
+        return if (itemCount == 0) EMPTY_VIEW_TYPE else super.getItemViewType(position)
+    }
+
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.pin_item, viewGroup, false)
         return ViewHolder(view, onPinUpdated)
     }
+
 
     override fun onBindViewHolder(viewHolder: ViewHolder, i: Int) {
         viewHolder.updateData(pins[i])
@@ -36,11 +43,16 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
         return pins.size
     }
 
+    companion object{
+        private const val EMPTY_VIEW_TYPE = 1
+    }
+
     class ViewHolder(view: View, private val onPinUpdated: (PinModel) -> Unit) :
         RecyclerView.ViewHolder(view) {
         private val titleView: TextView
         private val imgView: ImageView
         private val btnOpen: Button
+        private val btnToggleFavorite: ImageButton
         private val btnOpenPinterestLink: Button
         private val btnNotes: ImageButton
         private val txtNotes: EditText
@@ -72,7 +84,11 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
                 txtNotes.setText(note)
                 val onClickUrl = this.pdfLink ?: this.link!!
                 titleView.setOnClickListener { openInBrowser(onClickUrl) }
-                btnOpen.setOnClickListener { if(onClickUrl.startsWith("http")) openInBrowser(onClickUrl) else openPdfFile(onClickUrl) }
+                btnOpen.setOnClickListener {
+                    if (onClickUrl.startsWith("http")) openInBrowser(
+                        onClickUrl
+                    ) else openPdfFile(onClickUrl)
+                }
                 btnOpenPinterestLink.setOnClickListener { openInBrowser(this.link!!) }
                 btnNotes.setOnClickListener {
                     if (notesEditable) {
@@ -82,9 +98,21 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
                     notesEditable = !notesEditable
                     updateUI()
                 }
+                btnToggleFavorite.setOnClickListener {
+                    isFavorite = !isFavorite;
+                    onPinUpdated(this);
+                    btnToggleFavorite.setImageDrawable(isFavoriteDrawable(isFavorite))
+                }
                 Picasso.get().load(imgUrl).into(imgView)
-            }
+                btnToggleFavorite.setImageDrawable(isFavoriteDrawable(isFavorite))
 
+            }
+        }
+
+        private fun isFavoriteDrawable(isFavorite: Boolean): Drawable {
+            return if (isFavorite) context.resources.getDrawable(R.drawable.ic_star) else context.resources.getDrawable(
+                R.drawable.ic_star_outline
+            );
         }
 
         private fun openInBrowser(url: String) {
@@ -150,20 +178,8 @@ class PinAdapter(private val pins: List<PinModel>, private val onPinUpdated: (Pi
             btnNotes = view.findViewById(R.id.edit_notes)
             txtNotes = view.findViewById(R.id.txt_notes)
             txtNotes.inputType = InputType.TYPE_NULL
+            btnToggleFavorite = view.findViewById(R.id.toggle_favorite)
 
-
-/*            imgView.setOnClickListener((v)->{
-                    if(isImageFitToScreen) {
-                        isImageFitToScreen=false;
-                        imgView.setLayoutParams(new ConstraintLayout.LayoutParams(IMG_SIZE, IMG_SIZE));
-                        imgView.setAdjustViewBounds(true);
-                    }else{
-                        isImageFitToScreen=true;
-                        imgView.setLayoutParams(new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT));
-                        imgView.setScaleType(ImageView.ScaleType.FIT_XY);
-                    }
-
-            });*/
         }
     }
 }

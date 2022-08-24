@@ -22,12 +22,12 @@ import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+
 /**
  * Fragment containing [ViewPager] with Tabs for each Boards
  */
 @AndroidEntryPoint
 class BoardFragment : Fragment() {
-
     @Inject
     lateinit var pinterestAPI: PinterestAPI
 
@@ -72,18 +72,27 @@ class BoardFragment : Fragment() {
         pinterestAPI
             .requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
                 requireActivity().runOnUiThread {
+                    val allBoards = boards.toMutableList()
+                    allBoards.add(
+                        0,
+                        BoardResponse("Favorites", "", PIN2PDF_FAVORITES_BOARD_ID)
+                    )
                     boardCollectionAdapter = BoardPagerAdapter(
+                        requireContext(),
                         childFragmentManager,
-                        boards
+                        allBoards
                     )
                     viewPager.apply {
                         adapter = boardCollectionAdapter
-                        offscreenPageLimit = boards.size
+                        offscreenPageLimit = allBoards.size
                     }
                     tabLayout.apply {
                         setupWithViewPager(viewPager)
                         tabGravity = TabLayout.GRAVITY_CENTER
                         tabMode = TabLayout.MODE_SCROLLABLE
+                    }
+                    if (allBoards.size > 1) {
+                        viewPager.currentItem = 1
                     }
                     progress.dismiss()
                 }
@@ -129,11 +138,16 @@ class BoardFragment : Fragment() {
 
     companion object {
         private const val TAG = "BoardFragment"
+        val PIN2PDF_FAVORITES_BOARD_ID = "pin2pdf-favorites"
     }
-} // Since this is an object collection, use a FragmentStatePagerAdapter,
+}
 
 // and NOT a FragmentPagerAdapter.
-class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) :
+class BoardPagerAdapter(
+    val context: Context,
+    fm: FragmentManager?,
+    var boards: List<BoardResponse?>
+) :
     FragmentPagerAdapter(fm!!) {
     var fragments: MutableList<BoardObjectFragment?> = ArrayList()
     fun setFilter(filter: String) {
@@ -142,7 +156,7 @@ class BoardPagerAdapter(fm: FragmentManager?, var boards: List<BoardResponse?>) 
         }
     }
 
-    override fun getItem(i: Int): Fragment {
+    override fun getItem(i: Int): BoardObjectFragment {
         val fragment = BoardObjectFragment()
         val args = Bundle().apply {
             boards[i]!!.let {

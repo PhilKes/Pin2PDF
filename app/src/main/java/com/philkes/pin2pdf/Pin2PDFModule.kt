@@ -37,7 +37,8 @@ class Pin2PDFModule {
     fun appDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(
         context.applicationContext,
         AppDatabase::class.java, "app_database"
-    ).build()
+    ).addMigrations(AppDatabase.MIGRATION_2_3)
+        .build()
 
     @Singleton
     @Provides

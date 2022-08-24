@@ -109,7 +109,7 @@ class PdfConverter(
         isPrinting = true
         printFailed = false
         this.fromUrl = fromUrl
-        runOnUiThread(this)
+        runOnUiThread()
     }
 
     private fun getOutputFileDescriptor(): ParcelFileDescriptor? {
@@ -128,22 +128,13 @@ class PdfConverter(
     private val defaultPrintAttrs: PrintAttributes?
         private get() = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) null else PrintAttributes.Builder()
             .setMediaSize(PrintAttributes.MediaSize.NA_GOVT_LETTER)
-            .setResolution(Resolution("RESOLUTION_ID", "RESOLUTION_ID", 600, 600))
+            .setResolution(Resolution("RESOLUTION_ID", "RESOLUTION_ID", 100, 100))
             .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
             .build()
 
     @WorkerThread
-    private fun runOnUiThread(runnable: Runnable) {
-        /* try {
-             val handler = Handler(context.mainLooper)
-             handler.post(runnable)
-         } catch (e: Exception) {
-             e.printStackTrace()
-         }*/
-        ContextCompat.getMainExecutor(context).execute {
-            // This is where your UI code goes.
-            this.run();
-        }
+    private fun runOnUiThread() {
+        ContextCompat.getMainExecutor(context).execute(this);
     }
 
     fun destroy() {

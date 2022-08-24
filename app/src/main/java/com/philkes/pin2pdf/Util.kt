@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.widget.EditText
 import java.util.function.Consumer
 
+
 object Util {
     /**
      * Returns the Domain name of the given URL

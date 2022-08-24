@@ -29,4 +29,10 @@ class DBService constructor(private val pinDao: PinDao) {
     suspend fun clearAll() {
         pinDao.clear()
     }
+
+    suspend fun loadFavoritePins(onSuccess: Consumer<List<PinModel>>?) {
+        val pins = pinDao.loadFavoritePins()
+            .map { obj: Pin? -> obj!!.toModel() }
+        onSuccess?.accept(pins)
+    }
 }

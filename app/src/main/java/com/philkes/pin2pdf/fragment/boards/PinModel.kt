@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringEscapeUtils
 class PinModel(
     var id: Int?, var pinId: String?, mTitle: String?, mImgUrl: String?, mLink: String?,
     mPdfLink: String?, mBoard: String?,
-    mNote: String?
+    mNote: String?, mIsFavorite: Boolean
 ) {
     var title: String? = null
         set(title) {
@@ -24,6 +24,7 @@ class PinModel(
                 .replace(" ", "-")
         }
     var note: String? = null
+    var isFavorite: Boolean = false
 
     init {
         title = mTitle
@@ -32,5 +33,6 @@ class PinModel(
         pdfLink = mPdfLink
         board = mBoard
         note = mNote
+        isFavorite = mIsFavorite
     }
 }

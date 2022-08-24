@@ -40,6 +40,10 @@ class Pin {
     @ColumnInfo
     var note: String? = null
 
+    @JvmField
+    @ColumnInfo
+    var isFavorite: Boolean = false
+
     constructor() {}
     private constructor(
         id: Int?,
@@ -49,7 +53,8 @@ class Pin {
         link: String?,
         pdfLink: String?,
         board: String?,
-        note: String?
+        note: String?,
+        isFavorite: Boolean
     ) {
         this.id = id
         this.pinId = pinId
@@ -59,18 +64,20 @@ class Pin {
         this.pdfLink = pdfLink
         this.board = board
         this.note = note
+        this.isFavorite = isFavorite
     }
 
     fun toModel(): PinModel {
-        return PinModel(id, pinId, title, imgUrl, link, pdfLink, board, note)
+        return PinModel(id, pinId, title, imgUrl, link, pdfLink, board, note, isFavorite)
     }
 
     companion object {
         fun fromModel(model: PinModel): Pin {
-            val title = if(model.title !=null && model.title!!.isNotEmpty()) model.title!! else model.link!!
+            val title =
+                if (model.title != null && model.title!!.isNotEmpty()) model.title!! else model.link!!
             return Pin(
                 model.id, model.pinId, title, model.imgUrl,
-                model.link, model.pdfLink, model.board, model.note
+                model.link, model.pdfLink, model.board, model.note, model.isFavorite
             )
         }
     }

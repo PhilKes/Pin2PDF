@@ -5,8 +5,6 @@ import android.os.Build
 import android.os.FileUtils
 import android.print.PdfConverter
 import android.util.Log
-import androidx.fragment.app.FragmentActivity
-import com.android.volley.toolbox.HttpResponse
 import com.philkes.pin2pdf.Util.convertToCompatibleFileName
 import com.philkes.pin2pdf.Util.getUrlDomainName
 import com.philkes.pin2pdf.fragment.boards.PinModel
@@ -133,7 +131,7 @@ class ExtractRecipeToPDFTask(val context: Context, private val pins: List<PinMod
         with(URL(url).openConnection() as HttpURLConnection) {
             requestMethod = "HEAD"  // optional default is GET
             Log.d(TAG, "HEAD $url Content-Type:${contentType}")
-            return contentType.contains("pdf")
+            return contentType !== null && contentType.contains("pdf")
         }
     }
 
@@ -264,11 +262,6 @@ class ExtractRecipeToPDFTask(val context: Context, private val pins: List<PinMod
     private fun webPageToPdf(pinFileName: String, url: String): String? {
         return synchronized(PdfConverter) { convertToPdf(pinFileName, url) }
     }
-
-/*    private fun htmlElementToPdf(pinId: String, element: Element): String {
-        Log.d(TAG, "Trying to print from Url ${element.id()}")
-        return convertToPdf(pinId, element.html())
-    }*/
 
     companion object {
         private val urlValidator = UrlValidator()

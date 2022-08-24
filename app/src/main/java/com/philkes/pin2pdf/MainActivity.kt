@@ -17,6 +17,8 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var dbService: DBService
+    @Inject lateinit var settings:Pin2PDFModule.Settings
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,13 +46,7 @@ class MainActivity : AppCompatActivity() {
         with(menu.findItem(R.id.option_clear_pin_data)) {
             setOnMenuItemClickListener {
                 lifecycleScope.launch {
-
-                  /*  Util.showUsernameInputDialog(this@MainActivity) { username: String? ->
-                        // Reload Fragment to load new user
-                        (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
-                            username
-                        )
-                    }*/
+                    settings.resetUser(this@MainActivity)
                 }
                 true
             }
