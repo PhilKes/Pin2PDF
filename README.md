@@ -10,6 +10,7 @@
 
 ## TODO
 * Star-Rating for each Recipe
+* Offline Mode
 
 ## Done
 * RecyclerView of Pins with Image + Title
