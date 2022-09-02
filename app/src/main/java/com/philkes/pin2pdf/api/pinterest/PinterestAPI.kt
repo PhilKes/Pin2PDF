@@ -3,7 +3,6 @@ package com.philkes.pin2pdf.api.pinterest
 import android.content.Context
 import android.util.Log
 import androidx.core.util.Consumer
-import androidx.fragment.app.FragmentActivity
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.VolleyError
@@ -11,19 +10,17 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.gson.Gson
 import com.philkes.pin2pdf.api.ExtractRecipeToPDFTask
-import com.philkes.pin2pdf.api.TaskRunner
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import com.philkes.pin2pdf.api.pinterest.model.PinResponse
 import com.philkes.pin2pdf.api.pinterest.model.UserBoardsResponse
 import com.philkes.pin2pdf.api.pinterest.model.UserPinsResponse
 import com.philkes.pin2pdf.fragment.boards.PinModel
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutorService
+import java.util.function.Predicate
 
 /**
  * Methods to call the Pinterest JSON API for access to user's Boards + Pins
  */
-class PinterestAPI constructor(val context: Context, ) {
+class PinterestAPI constructor(val context: Context) {
     private val queue: RequestQueue
 
     /**
@@ -70,9 +67,10 @@ class PinterestAPI constructor(val context: Context, ) {
 
     /**
      * Try to scrape PDF/Print Links
+     * @param onProgress is called when a PDF has been scraped for a pin, returns whether or not scraping has been cancelled
      */
-    fun scrapePDFLinks(boardPins: List<PinModel>): List<PinModel> {
-        return ExtractRecipeToPDFTask(context, boardPins).call();
+    fun scrapePDFLinks(boardPins: List<PinModel>, onProgress: Predicate<PinModel>): List<PinModel> {
+        return ExtractRecipeToPDFTask(context, boardPins, onProgress).call();
     }
 
 

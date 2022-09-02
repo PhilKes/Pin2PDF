@@ -10,6 +10,8 @@
 
 ## TODO
 * Star-Rating for each Recipe
+* Offline Mode
+* Option to scrape only from specific Pinterest boards
 
 ## Done
 * RecyclerView of Pins with Image + Title

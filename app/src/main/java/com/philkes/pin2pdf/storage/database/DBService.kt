@@ -13,6 +13,12 @@ class DBService constructor(private val pinDao: PinDao) {
         onSuccess?.accept(pins)
     }
 
+    suspend fun loadPinsOfBoard(board: String, onSuccess: Consumer<List<PinModel>>?) {
+        val pins = pinDao.loadAllPinsOfBoard(board)
+            .map { obj: Pin? -> obj!!.toModel() }
+        onSuccess?.accept(pins)
+    }
+
     suspend fun insertPins(pins: List<PinModel>, onSuccess: Runnable?) {
         pinDao.insertAll(
             pins.map { model: PinModel -> Pin.fromModel(model) }

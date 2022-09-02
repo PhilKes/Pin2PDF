@@ -12,14 +12,17 @@ import androidx.core.view.MenuItemCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.android.volley.VolleyError
 import com.google.android.material.tabs.TabLayout
 import com.philkes.pin2pdf.R
-import com.philkes.pin2pdf.Util.showUsernameInputDialog
+import com.philkes.pin2pdf.Settings
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -31,7 +34,10 @@ class BoardFragment : Fragment() {
     @Inject
     lateinit var pinterestAPI: PinterestAPI
 
-    lateinit var boardCollectionAdapter: BoardPagerAdapter
+    @Inject
+    lateinit var settings: Settings
+
+    var boardCollectionAdapter: BoardPagerAdapter? = null
     lateinit var tabLayout: TabLayout
     lateinit var viewPager: ViewPager
 
@@ -52,7 +58,7 @@ class BoardFragment : Fragment() {
         )
         val username = sharedPref.getString(resources.getString(R.string.key_user_name), null)
         if (username == null) {
-            showUsernameInputDialog(requireActivity()) { newUsername: String? ->
+            settings.showUsernameInputDialog(requireActivity()) { newUsername: String? ->
                 loadUser(
                     newUsername
                 )
@@ -63,14 +69,21 @@ class BoardFragment : Fragment() {
     }
 
     fun loadUser(username: String?) {
+        if(boardCollectionAdapter!=null){
+            boardCollectionAdapter!!.fragments.forEach {
+                it?.reset()
+            }
+        }
         val progress = ProgressDialog(context).apply {
             setTitle(getString(R.string.progress_title))
             setMessage(getString(R.string.progress_wait))
             setCancelable(false) // disable dismiss by tapping outside of the dialog
             show()
         }
+        Log.d(TAG, "Loading Boards of User $username")
         pinterestAPI
             .requestBoardsOfUser(username, { boards: List<BoardResponse?> ->
+                Log.d(TAG, "Found boards: ${boards.map { it?.name }}")
                 requireActivity().runOnUiThread {
                     val allBoards = boards.toMutableList()
                     allBoards.add(
@@ -107,15 +120,25 @@ class BoardFragment : Fragment() {
                         )
                     )
                     setPositiveButton(R.string.alert_error_btn_positive) { _: DialogInterface?, _: Int ->
-                        showUsernameInputDialog(
-                            requireContext()
-                        ) { username: String? -> loadUser(username) }
+                        settings.showUsernameInputDialog(requireActivity()) { username: String? ->
+                            loadUser(
+                                username
+                            )
+                        }
                     }
                     setCancelable(true)
                     show()
                 }
 
             }
+    }
+
+    fun fetchPinsOfAllBoards() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            boardCollectionAdapter!!.fragments.forEach {
+                it?.fetchAllPins()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -129,7 +152,7 @@ class BoardFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                boardCollectionAdapter.setFilter(newText)
+                boardCollectionAdapter!!.setFilter(newText)
                 return false
             }
         })

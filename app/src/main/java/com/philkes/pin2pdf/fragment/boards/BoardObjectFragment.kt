@@ -1,24 +1,27 @@
 package com.philkes.pin2pdf.fragment.boards
 
 import android.app.ProgressDialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.util.Consumer
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.philkes.pin2pdf.Pin2PDFModule
 import com.philkes.pin2pdf.R
+import com.philkes.pin2pdf.Settings
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.storage.database.DBService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -33,7 +36,7 @@ class BoardObjectFragment : Fragment() {
     lateinit var dbService: DBService
 
     @Inject
-    lateinit var settings: Pin2PDFModule.Settings
+    lateinit var settings: Settings
 
     @Inject
     lateinit var pinterestAPI: PinterestAPI
@@ -47,7 +50,7 @@ class BoardObjectFragment : Fragment() {
     private var boardId: String? = null
     var boardName: String? = null
 
-    val isFavoritesBoard: Boolean
+    private val isFavoritesBoard: Boolean
         get() = boardId == BoardFragment.PIN2PDF_FAVORITES_BOARD_ID
 
     override fun onCreateView(
@@ -58,7 +61,6 @@ class BoardObjectFragment : Fragment() {
     }
 
     var viewSetup = false
-    var pinsLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with(arguments!!) {
@@ -68,15 +70,15 @@ class BoardObjectFragment : Fragment() {
         setupUI(view)
         viewSetup = true;
         if (userVisibleHint) {
-            loadPins();
+            fetchAllPins();
         }
-//        loadPins()
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
-        if (isVisibleToUser && ((viewSetup && !pinsLoaded) || isFavoritesBoard)) {
-            loadPins()
+        Log.d(TAG, "Board $boardName visible $isVisibleToUser allpins size ${allPins.size}")
+        if (isVisibleToUser && ((viewSetup && allPins.isEmpty()) || isFavoritesBoard)) {
+            fetchAllPins()
         }
     }
 
@@ -102,26 +104,38 @@ class BoardObjectFragment : Fragment() {
         }
         refreshLayout = view.findViewById<SwipeRefreshLayout?>(R.id.refresh_layout).apply {
             setOnRefreshListener {
-                loadPins()
+                fetchAllPins()
                 isRefreshing = false
             }
         }
     }
 
+    private var cancelScraping = false
 
-    private fun loadPins() {
+    fun isCancelScraping(): Boolean {
+        return cancelScraping;
+    }
+
+    suspend fun loadExistingPins(onSuccess: Consumer<List<PinModel>>?) {
+        Log.d(TAG, "Loading existing Pins of Board $boardName")
+        dbService.loadPinsOfBoard(boardName!!) { allPins: List<PinModel> ->
+            updatePinsList(allPins)
+            this@BoardObjectFragment.allPins = allPins
+            onSuccess?.accept(allPins)
+        }
+    }
+
+    fun fetchAllPins() {
+        Log.d(TAG, "Fetch pins of $boardName")
         val progress = ProgressDialog(context).apply {
             setTitle(String.format(getString(R.string.progress_pins_title), boardName))
             setMessage(getString(R.string.progress_pins_wait))
-/*           TODO setCancelable(true) // disable dismiss by tapping outside of the dialog
             setButton(
                 DialogInterface.BUTTON_NEGATIVE,
                 "Cancel"
             ) { dialogInterface, i ->
-                lifecycleScope.launch {
-                    settings.resetUser(ownerActivity)
-                }
-            };*/
+                cancelScraping = true
+            };
         }
 
         if (isFavoritesBoard) {
@@ -149,22 +163,37 @@ class BoardObjectFragment : Fragment() {
                             activity!!.runOnUiThread {
                                 progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${missingPins.size} Pins")
                             }
-                            val updatedPins = pinterestAPI.scrapePDFLinks(missingPins)
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                dbService.insertPins(updatedPins) {
-                                    lifecycleScope.launch {
-                                        // Reload all Pins from Local DB
-                                        dbService.loadPins(
-                                            pins.map { obj: PinModel -> obj.pinId!! }) { allPins: List<PinModel> ->
-                                            updatePinsList(allPins)
-                                            // Store all available Pins separately for filtering
-                                            this@BoardObjectFragment.allPins = allPins
-                                            activity!!.runOnUiThread {
-                                                progress.dismiss()
-                                            }
-                                        }
+                            val insertJobs = mutableListOf<Job>()
+                            var pinCounter = 0;
+                            cancelScraping = false
+                            pinterestAPI.scrapePDFLinks(missingPins) { updatedPin ->
+                                insertJobs.add(lifecycleScope.launch(Dispatchers.IO) {
+                                    dbService.insertPins(listOf(updatedPin)) {
+                                    }
+                                })
+                                activity!!.runOnUiThread {
+                                    progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${++pinCounter} of ${missingPins.size} Pins")
+                                }
+                                return@scrapePDFLinks !isCancelScraping()
+                            }
+                            cancelScraping = false
+                            lifecycleScope.launch {
+                                insertJobs.forEach { it.join() }
+                                // Reload all Pins from Local DB
+                                dbService.loadPins(
+                                    pins.map { obj: PinModel -> obj.pinId!! }) { allPins: List<PinModel> ->
+                                    updatePinsList(allPins)
+                                    // Store all available Pins separately for filtering
+                                    this@BoardObjectFragment.allPins = allPins
+                                    activity!!.runOnUiThread {
+                                        progress.dismiss()
                                     }
                                 }
+/*                                loadExistingPins {
+                                    activity!!.runOnUiThread {
+                                        progress.dismiss()
+                                    }
+                                }*/
                             }
 
                         } else {
@@ -179,7 +208,6 @@ class BoardObjectFragment : Fragment() {
             }
 
         }
-        pinsLoaded = true;
     }
 
     private fun updatePinsList(pins: List<PinModel>) {
@@ -197,6 +225,12 @@ class BoardObjectFragment : Fragment() {
 
             pinListViewAdapter.notifyDataSetChanged()
         }
+    }
+
+    fun reset() {
+        val emptyList = listOf<PinModel>()
+        updatePinsList(emptyList)
+        this.allPins = emptyList
     }
 
     fun setFilter(filter: String) {

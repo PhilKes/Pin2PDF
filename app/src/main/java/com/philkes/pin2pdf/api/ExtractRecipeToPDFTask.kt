@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.FileUtils
 import android.print.PdfConverter
 import android.util.Log
+import androidx.core.util.Consumer
 import com.philkes.pin2pdf.Util.convertToCompatibleFileName
 import com.philkes.pin2pdf.Util.getUrlDomainName
 import com.philkes.pin2pdf.fragment.boards.PinModel
@@ -19,13 +20,18 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.util.concurrent.Callable
+import java.util.function.Predicate
 import kotlin.io.path.Path
 
 
 /**
  * Task to scrape a recipe's PDF/Print Link from a HTML page
  */
-class ExtractRecipeToPDFTask(val context: Context, private val pins: List<PinModel>) :
+class ExtractRecipeToPDFTask(
+    val context: Context,
+    private val pins: List<PinModel>,
+    val onProgress: Predicate<PinModel>
+) :
     Callable<List<PinModel>> {
 
     val HTTP = "http"
@@ -119,6 +125,10 @@ class ExtractRecipeToPDFTask(val context: Context, private val pins: List<PinMod
             }
             Log.d(TAG, "PDFLink: $pdfLink")
             pin.pdfLink = pdfLink
+            // Show Progress and check if Scraping should be interrupted
+            if (pdfLink != null && !onProgress.test(pin)) {
+                break
+            }
             futures.add(pin);
         }
         return futures

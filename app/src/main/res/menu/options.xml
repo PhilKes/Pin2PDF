@@ -5,7 +5,7 @@
             android:icon="@android:drawable/ic_menu_edit"
             android:title="Edit Username"/>
     <item
-            android:id="@+id/option_clear_pin_data"
+            android:id="@+id/option_refresh_all_boards"
             android:icon="@android:drawable/ic_menu_edit"
-            android:title="Clear Pin Data"/>
+            android:title="Refresh all Boards"/>
 </menu>

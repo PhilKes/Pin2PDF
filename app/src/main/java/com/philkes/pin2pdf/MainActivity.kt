@@ -1,7 +1,5 @@
 package com.philkes.pin2pdf
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
@@ -16,13 +14,19 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    @Inject lateinit var dbService: DBService
-    @Inject lateinit var settings:Pin2PDFModule.Settings
+    @Inject
+    lateinit var dbService: DBService
 
+    @Inject
+    lateinit var settings: Settings
+
+    private lateinit var boardFragment: BoardFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        boardFragment =
+            supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment
     }
 
     /**
@@ -33,20 +37,26 @@ class MainActivity : AppCompatActivity() {
         inflater.inflate(R.menu.options, menu)
         with(menu.findItem(R.id.option_username_edit)) {
             setOnMenuItemClickListener {
-                Util.showUsernameInputDialog(this@MainActivity) { username: String? ->
-                    // Reload Fragment to load new user
-                    (supportFragmentManager.findFragmentById(R.id.boardFragment) as BoardFragment?)!!.loadUser(
-                        username
-                    )
+                settings.showUsernameInputDialog(this@MainActivity) { username: String? ->
+                    lifecycleScope.launch {
+                        settings.resetPins{
+                            // Reload Fragment to load new user
+                            boardFragment.loadUser(username)
+                        }
+
+                    }
                 }
                 true
             }
         }
 
-        with(menu.findItem(R.id.option_clear_pin_data)) {
+        with(menu.findItem(R.id.option_refresh_all_boards)) {
             setOnMenuItemClickListener {
                 lifecycleScope.launch {
-                    settings.resetUser(this@MainActivity)
+                    settings.resetPins{
+                        // Refetch all boards and pins
+                        boardFragment.loadUser(settings.username)
+                    }
                 }
                 true
             }

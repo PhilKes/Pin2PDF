@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:visibility="invisible"
             android:textSize="18dp"
-            android:text="You dont have any favorites yet..."
+            android:text="You don't have any Pins on this board yet..."
             app:layout_constraintBottom_toBottomOf="@+id/pins_list"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
