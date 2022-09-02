@@ -51,7 +51,7 @@ class Pin2PDFModule {
 
     @Singleton
     @Provides
-    fun settings(@ApplicationContext context: Context, dbService: DBService) =
-        Settings(context, dbService)
+    fun settings(@ApplicationContext context: Context, dbService: DBService, pinterestAPI: PinterestAPI) =
+        Settings(context, dbService, pinterestAPI)
 
 }

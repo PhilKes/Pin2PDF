@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.philkes.pin2pdf.api.pinterest.PinterestAPI
+import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import com.philkes.pin2pdf.fragment.boards.BoardFragment
 import com.philkes.pin2pdf.storage.database.DBService
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +21,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var settings: Settings
+
+    @Inject
+    lateinit var pinterestApi: PinterestAPI
 
     private lateinit var boardFragment: BoardFragment
 
@@ -37,11 +42,11 @@ class MainActivity : AppCompatActivity() {
         inflater.inflate(R.menu.options, menu)
         with(menu.findItem(R.id.option_username_edit)) {
             setOnMenuItemClickListener {
-                settings.showUsernameInputDialog(this@MainActivity) { username: String? ->
+                settings.showUserAndBoardInput(this@MainActivity) { boards: List<BoardResponse> ->
                     lifecycleScope.launch {
-                        settings.resetPins{
+                        settings.resetPins {
                             // Reload Fragment to load new user
-                            boardFragment.loadUser(username)
+                            boardFragment.loadBoards(boards)
                         }
 
                     }
@@ -53,9 +58,9 @@ class MainActivity : AppCompatActivity() {
         with(menu.findItem(R.id.option_refresh_all_boards)) {
             setOnMenuItemClickListener {
                 lifecycleScope.launch {
-                    settings.resetPins{
+                    settings.resetPins {
                         // Refetch all boards and pins
-                        boardFragment.loadUser(settings.username)
+                        boardFragment.loadBoards(settings.userBoards!!)
                     }
                 }
                 true

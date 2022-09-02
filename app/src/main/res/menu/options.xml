@@ -3,7 +3,7 @@
     <item
             android:id="@+id/option_username_edit"
             android:icon="@android:drawable/ic_menu_edit"
-            android:title="Edit Username"/>
+            android:title="Change User and Boards"/>
     <item
             android:id="@+id/option_refresh_all_boards"
             android:icon="@android:drawable/ic_menu_edit"

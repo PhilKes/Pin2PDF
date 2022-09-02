@@ -1,5 +1,6 @@
 package com.philkes.pin2pdf.fragment.boards
 
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.os.Bundle
@@ -7,6 +8,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.util.Consumer
 import androidx.fragment.app.Fragment
@@ -116,28 +119,21 @@ class BoardObjectFragment : Fragment() {
         return cancelScraping;
     }
 
-    suspend fun loadExistingPins(onSuccess: Consumer<List<PinModel>>?) {
-        Log.d(TAG, "Loading existing Pins of Board $boardName")
-        dbService.loadPinsOfBoard(boardName!!) { allPins: List<PinModel> ->
-            updatePinsList(allPins)
-            this@BoardObjectFragment.allPins = allPins
-            onSuccess?.accept(allPins)
-        }
-    }
-
     fun fetchAllPins() {
         Log.d(TAG, "Fetch pins of $boardName")
         val progress = ProgressDialog(context).apply {
             setTitle(String.format(getString(R.string.progress_pins_title), boardName))
             setMessage(getString(R.string.progress_pins_wait))
-            setButton(
-                DialogInterface.BUTTON_NEGATIVE,
-                "Cancel"
-            ) { dialogInterface, i ->
-                cancelScraping = true
-            };
+            setCancelable(false)
+            setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", { i, a -> })
         }
-
+        progress.setOnShowListener {
+            val button: Button =
+                (progress as ProgressDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
+            button.setOnClickListener {
+                cancelScraping = true
+            }
+        }
         if (isFavoritesBoard) {
             lifecycleScope.launch(Dispatchers.IO) {
                 dbService.loadFavoritePins { pins ->

@@ -28,8 +28,8 @@ class PinterestAPI constructor(val context: Context) {
      */
     fun requestBoardsOfUser(
         user: String?,
-        onSuccess: Consumer<List<BoardResponse?>>?,
-        onError: Consumer<VolleyError?>
+        onSuccess: Consumer<List<BoardResponse>>?,
+        onError: Consumer<VolleyError>?
     ) {
         val url = String.format(PIN_GET_BOARDS_URL, user)
         val stringRequest = StringRequest(
@@ -39,7 +39,7 @@ class PinterestAPI constructor(val context: Context) {
                 val boardResponses: List<BoardResponse> =
                     responseObj.resource_response!!.data!!.sortedBy { it!!.name }.map { it!! }
                 onSuccess?.accept(boardResponses)
-            }) { t: VolleyError? -> onError.accept(t) }
+            }) { t: VolleyError? -> onError?.accept(t) }
         queue.add(stringRequest)
     }
 

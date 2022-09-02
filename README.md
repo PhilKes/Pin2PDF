@@ -11,7 +11,6 @@
 ## TODO
 * Star-Rating for each Recipe
 * Offline Mode
-* Option to scrape only from specific Pinterest boards
 
 ## Done
 * RecyclerView of Pins with Image + Title
@@ -27,3 +26,4 @@
 * Add Search Bar Functionality
 * Download/Print recipes to local .PDF Files
 * Favorites List
+* Option to scrape only from specific Pinterest boards
