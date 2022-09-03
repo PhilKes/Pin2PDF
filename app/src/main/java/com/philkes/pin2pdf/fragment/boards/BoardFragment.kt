@@ -1,9 +1,7 @@
 package com.philkes.pin2pdf.fragment.boards
 
-import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -12,17 +10,13 @@ import androidx.core.view.MenuItemCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
-import com.android.volley.VolleyError
 import com.google.android.material.tabs.TabLayout
 import com.philkes.pin2pdf.R
 import com.philkes.pin2pdf.Settings
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
 import com.philkes.pin2pdf.api.pinterest.model.BoardResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -53,9 +47,19 @@ class BoardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewPager = view.findViewById(R.id.boardPager)
         tabLayout = view.findViewById(R.id.tab_layout)
-        val sharedPref = requireActivity().getSharedPreferences(
-            getString(R.string.app_name), Context.MODE_PRIVATE
+
+        boardCollectionAdapter = BoardPagerAdapter(
+            requireContext(),
+            childFragmentManager,
+            mutableListOf()
         )
+        viewPager.adapter = boardCollectionAdapter
+
+        tabLayout.apply {
+            setupWithViewPager(viewPager)
+            tabGravity = TabLayout.GRAVITY_CENTER
+            tabMode = TabLayout.MODE_SCROLLABLE
+        }
         if (settings.username == null || settings.userBoards == null) {
             settings.showUserAndBoardInput(requireActivity()) { boards -> loadBoards(boards) }
         } else {
@@ -63,55 +67,51 @@ class BoardFragment : Fragment() {
         }
     }
 
-    fun loadBoards(boards: List<BoardResponse>) {
+    fun reset(){
         if (boardCollectionAdapter != null) {
-            boardCollectionAdapter!!.fragments.forEach {
-                it?.reset()
+            with(boardCollectionAdapter!!){
+                fragments.forEach {
+                    it?.reset()
+                }
+                for (i in fragments.indices){
+                    val item: Any = getItem(i)
+                    destroyItem(viewPager,i, item)
+                }
+                boards.clear()
+                fragments.clear()
+                notifyDataSetChanged()
             }
-            boardCollectionAdapter!!.boards = listOf()
-            boardCollectionAdapter!!.fragments.clear()
         }
+
+    }
+
+    fun loadBoards(newBoards: List<BoardResponse>) {
+
         val progress = ProgressDialog(context).apply {
             setTitle(getString(R.string.progress_title))
             setMessage(getString(R.string.progress_wait))
             setCancelable(false) // disable dismiss by tapping outside of the dialog
             show()
         }
-        Log.d(TAG, "Loading boards: ${boards.map { it.name }}")
+        Log.d(TAG, "Loading boards: ${newBoards.map { it.name }}")
         requireActivity().runOnUiThread {
-            val allBoards = boards.toMutableList()
+            val allBoards = newBoards.toMutableList()
             allBoards.add(
                 0,
                 BoardResponse("Favorites", "", PIN2PDF_FAVORITES_BOARD_ID)
             )
-            boardCollectionAdapter = BoardPagerAdapter(
-                requireContext(),
-                childFragmentManager,
-                allBoards
-            )
-            viewPager.apply {
-                adapter = boardCollectionAdapter
-                offscreenPageLimit = allBoards.size
-            }
-            tabLayout.apply {
-                setupWithViewPager(viewPager)
-                tabGravity = TabLayout.GRAVITY_CENTER
-                tabMode = TabLayout.MODE_SCROLLABLE
-            }
+            reset()
+            boardCollectionAdapter!!.boards.addAll(allBoards)
+            boardCollectionAdapter!!.init()
+            boardCollectionAdapter!!.notifyDataSetChanged()
+            viewPager.offscreenPageLimit = allBoards.size
             if (allBoards.size > 1) {
                 viewPager.currentItem = 1
             }
+
             progress.dismiss()
         }
 
-    }
-
-    fun fetchPinsOfAllBoards() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            boardCollectionAdapter!!.fragments.forEach {
-                it?.fetchAllPins()
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -142,7 +142,7 @@ class BoardFragment : Fragment() {
 class BoardPagerAdapter(
     val context: Context,
     fm: FragmentManager?,
-    var boards: List<BoardResponse?>
+    var boards: MutableList<BoardResponse?>
 ) :
     FragmentPagerAdapter(fm!!) {
     var fragments: MutableList<BoardObjectFragment?> = ArrayList()
@@ -173,9 +173,13 @@ class BoardPagerAdapter(
         return boards[position]!!.name
     }
 
-    init {
+    fun init(){
         for (i in boards.indices) {
             fragments.add(null)
         }
+    }
+
+    init {
+        init()
     }
 }

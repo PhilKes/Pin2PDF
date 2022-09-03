@@ -1,5 +1,6 @@
 package com.philkes.pin2pdf.storage.database
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Dao
@@ -11,10 +12,10 @@ interface PinDao {
     suspend fun loadAllByPinIds(pinIds: List<String>): List<Pin>
 
     @Query("SELECT * FROM pin WHERE board=:board ORDER BY pinId DESC")
-    suspend fun loadAllPinsOfBoard(board: String): List<Pin>
+    fun loadAllPinsOfBoard(board: String): LiveData<List<Pin>>
 
     @Query("SELECT * FROM pin WHERE isFavorite = 1 ORDER BY pinId DESC")
-    suspend fun loadFavoritePins(): List<Pin>
+    fun loadFavoritePins(): LiveData<List<Pin>>
 
     @Insert
     suspend fun insertAll(pins: List<Pin>?)

@@ -1,5 +1,6 @@
 package com.philkes.pin2pdf.storage.database
 
+import androidx.lifecycle.LiveData
 import com.philkes.pin2pdf.fragment.boards.PinModel
 import java.util.function.Consumer
 
@@ -13,10 +14,8 @@ class DBService constructor(private val pinDao: PinDao) {
         onSuccess?.accept(pins)
     }
 
-    suspend fun loadPinsOfBoard(board: String, onSuccess: Consumer<List<PinModel>>?) {
-        val pins = pinDao.loadAllPinsOfBoard(board)
-            .map { obj: Pin? -> obj!!.toModel() }
-        onSuccess?.accept(pins)
+    fun loadPinsOfBoard(board: String): LiveData<List<Pin>> {
+        return pinDao.loadAllPinsOfBoard(board)
     }
 
     suspend fun insertPins(pins: List<PinModel>, onSuccess: Runnable?) {
@@ -36,9 +35,7 @@ class DBService constructor(private val pinDao: PinDao) {
         pinDao.clear()
     }
 
-    suspend fun loadFavoritePins(onSuccess: Consumer<List<PinModel>>?) {
-        val pins = pinDao.loadFavoritePins()
-            .map { obj: Pin? -> obj!!.toModel() }
-        onSuccess?.accept(pins)
+    fun loadFavoritePins(): LiveData<List<Pin>> {
+        return pinDao.loadFavoritePins()
     }
 }

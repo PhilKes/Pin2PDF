@@ -43,6 +43,9 @@ class MainActivity : AppCompatActivity() {
         with(menu.findItem(R.id.option_username_edit)) {
             setOnMenuItemClickListener {
                 settings.showUserAndBoardInput(this@MainActivity) { boards: List<BoardResponse> ->
+                    runOnUiThread {
+                        boardFragment.reset()
+                    }
                     lifecycleScope.launch {
                         settings.resetPins {
                             // Reload Fragment to load new user
