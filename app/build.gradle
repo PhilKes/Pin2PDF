@@ -1,7 +1,4 @@
-
-
-
-plugins{
+plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'dagger.hilt.android.plugin'
@@ -17,7 +14,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 30
         versionCode 3
-        versionName "2.0"
+        versionName "2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,7 +30,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    packagingOptions{
+    packagingOptions {
         pickFirst 'META-INF/LICENSE-LGPL-3.txt'
         pickFirst 'META-INF/DEPENDENCIES'
         pickFirst 'META-INF/LICENSE-W3C-TEST'
@@ -82,8 +79,11 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
 
     implementation 'com.tom-roush:pdfbox-android:2.0.25.0'
+    implementation "androidx.viewpager2:viewpager2:1.0.0"
+    implementation "com.google.android.material:material:1.1.0-beta01"
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-jdk8
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-jdk8', version: '1.6.1'
+
 
 }

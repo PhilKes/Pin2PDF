@@ -50,8 +50,7 @@ class BoardObjectFragment : Fragment() {
     private var allPins: List<PinModel> = ArrayList()
     private var boardId: String? = null
     var boardName: String? = null
-
-    var destroyed: Boolean = false
+    var initiallyFetchPins: Boolean = false
 
     private val isFavoritesBoard: Boolean
         get() = boardId == BoardFragment.PIN2PDF_FAVORITES_BOARD_ID
@@ -71,10 +70,7 @@ class BoardObjectFragment : Fragment() {
             boardId = getString(ARG_BOARD_ID)
         }
         setupUI(view)
-        viewSetup = true;
-        /*if (userVisibleHint) {
-            fetchAllPins();
-        }*/
+        viewSetup = true
         if (isFavoritesBoard) {
             dbService.loadFavoritePins().observe(
                 viewLifecycleOwner
@@ -85,15 +81,10 @@ class BoardObjectFragment : Fragment() {
                     viewLifecycleOwner
                 ) { changedPins -> setChangedPins(changedPins) }
         }
-
-    }
-
-    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
-        super.setUserVisibleHint(isVisibleToUser)
-        Log.d(TAG, "Board $boardName visible $isVisibleToUser allpins size ${allPins.size}")
-        if (!destroyed && isVisibleToUser && ((viewSetup && allPins.isEmpty()) || isFavoritesBoard)) {
+        if(initiallyFetchPins){
             fetchAllPins()
         }
+
     }
 
     private fun setupUI(view: View) {
@@ -151,6 +142,10 @@ class BoardObjectFragment : Fragment() {
         }
         progress.show()
         pinterestAPI.requestPinsOfBoard(boardId) { pins: List<PinModel> ->
+            if(cancelScraping){
+                progress.dismiss()
+                return@requestPinsOfBoard
+            }
             Log.d(TAG, "All Pins: ${pins.size}")
             // Try to load all Pins from local DB
             // important: use Dispatchers.IO to not block the UI Thread
@@ -226,14 +221,6 @@ class BoardObjectFragment : Fragment() {
         }
     }
 
-    fun reset() {
-        val emptyList = listOf<PinModel>()
-        updatePinsList(emptyList)
-        this.allPins = emptyList
-        destroyed= true
-//        dbService.loadPinsOfBoard(boardName!!).removeObservers(viewLifecycleOwner)
-    }
-
     fun setFilter(filter: String) {
         val filteredPins: MutableList<PinModel> = ArrayList()
         // Find all Pins that match Filter from allPins
@@ -245,6 +232,12 @@ class BoardObjectFragment : Fragment() {
             }
         }
         updatePinsList(filteredPins)
+    }
+
+    fun checkPins() {
+        if (allPins.isEmpty()) {
+            fetchAllPins()
+        }
     }
 
     companion object {

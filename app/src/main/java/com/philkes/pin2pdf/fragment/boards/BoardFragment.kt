@@ -8,10 +8,10 @@ import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuItemCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.philkes.pin2pdf.R
 import com.philkes.pin2pdf.Settings
 import com.philkes.pin2pdf.api.pinterest.PinterestAPI
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 
 /**
- * Fragment containing [ViewPager] with Tabs for each Boards
+ * Fragment containing [ViewPager2] with Tabs for each Boards
  */
 @AndroidEntryPoint
 class BoardFragment : Fragment() {
@@ -33,7 +33,7 @@ class BoardFragment : Fragment() {
 
     var boardCollectionAdapter: BoardPagerAdapter? = null
     lateinit var tabLayout: TabLayout
-    lateinit var viewPager: ViewPager
+    lateinit var viewPager: ViewPager2
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,42 +47,22 @@ class BoardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewPager = view.findViewById(R.id.boardPager)
         tabLayout = view.findViewById(R.id.tab_layout)
-
-        boardCollectionAdapter = BoardPagerAdapter(
-            requireContext(),
-            childFragmentManager,
-            mutableListOf()
-        )
-        viewPager.adapter = boardCollectionAdapter
-
-        tabLayout.apply {
-            setupWithViewPager(viewPager)
-            tabGravity = TabLayout.GRAVITY_CENTER
-            tabMode = TabLayout.MODE_SCROLLABLE
-        }
         if (settings.username == null || settings.userBoards == null) {
             settings.showUserAndBoardInput(requireActivity()) { boards -> loadBoards(boards) }
         } else {
             loadBoards(settings.userBoards!!)
         }
-    }
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                with(boardCollectionAdapter) {
+                    if (this != null && fragments[position] != null) {
+                        fragments[position]!!.checkPins()
+                    }
+                }
 
-    fun reset(){
-        if (boardCollectionAdapter != null) {
-            with(boardCollectionAdapter!!){
-                fragments.forEach {
-                    it?.reset()
-                }
-                for (i in fragments.indices){
-                    val item: Any = getItem(i)
-                    destroyItem(viewPager,i, item)
-                }
-                boards.clear()
-                fragments.clear()
-                notifyDataSetChanged()
             }
-        }
-
+        })
     }
 
     fun loadBoards(newBoards: List<BoardResponse>) {
@@ -100,13 +80,24 @@ class BoardFragment : Fragment() {
                 0,
                 BoardResponse("Favorites", "", PIN2PDF_FAVORITES_BOARD_ID)
             )
-            reset()
-            boardCollectionAdapter!!.boards.addAll(allBoards)
-            boardCollectionAdapter!!.init()
-            boardCollectionAdapter!!.notifyDataSetChanged()
+            boardCollectionAdapter = BoardPagerAdapter(
+                requireContext(),
+                this,
+                allBoards
+            )
+            viewPager.adapter = boardCollectionAdapter
+            tabLayout.apply {
+                TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+                    tab.text = allBoards[position].name
+                }.attach()
+
+                tabGravity = TabLayout.GRAVITY_CENTER
+                tabMode = TabLayout.MODE_SCROLLABLE
+            }
             viewPager.offscreenPageLimit = allBoards.size
             if (allBoards.size > 1) {
                 viewPager.currentItem = 1
+                boardCollectionAdapter!!.initialItem = viewPager.currentItem
             }
 
             progress.dismiss()
@@ -138,48 +129,45 @@ class BoardFragment : Fragment() {
     }
 }
 
-// and NOT a FragmentPagerAdapter.
 class BoardPagerAdapter(
     val context: Context,
-    fm: FragmentManager?,
-    var boards: MutableList<BoardResponse?>
-) :
-    FragmentPagerAdapter(fm!!) {
+    fragment: Fragment,
+    var boards: MutableList<BoardResponse>
+) : FragmentStateAdapter(fragment) {
     var fragments: MutableList<BoardObjectFragment?> = ArrayList()
+    var initialItem: Int = -1
+
     fun setFilter(filter: String) {
         for (fragment in fragments) {
             fragment!!.setFilter(filter)
         }
     }
 
-    override fun getItem(i: Int): BoardObjectFragment {
-        val fragment = BoardObjectFragment()
-        val args = Bundle().apply {
-            boards[i]!!.let {
-                putString(BoardObjectFragment.ARG_BOARD, it.name)
-                putString(BoardObjectFragment.ARG_BOARD_ID, it.id)
-            }
-        }
-        fragment.arguments = args
-        fragments[i] = fragment
-        return fragment
-    }
-
-    override fun getCount(): Int {
-        return boards.size
-    }
-
-    override fun getPageTitle(position: Int): CharSequence? {
-        return boards[position]!!.name
-    }
-
-    fun init(){
+    init {
         for (i in boards.indices) {
             fragments.add(null)
         }
     }
 
-    init {
-        init()
+    override fun getItemCount(): Int {
+        return boards.size
     }
+
+    override fun createFragment(position: Int): Fragment {
+        val fragment = BoardObjectFragment()
+        if (position == initialItem) {
+            fragment.initiallyFetchPins = true
+        }
+        val args = Bundle().apply {
+            boards[position].let {
+                putString(BoardObjectFragment.ARG_BOARD, it.name)
+                putString(BoardObjectFragment.ARG_BOARD_ID, it.id)
+            }
+        }
+        fragment.arguments = args
+        fragments[position] = fragment
+        return fragment
+    }
+
+
 }
