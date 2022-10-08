@@ -50,6 +50,9 @@ class ExtractRecipeToPDFTask(
                 recipeLink = pin.link!!
                 if (recipeLink.contains("youtube.com")) {
                     futures.add(pin);
+                    if (!onProgress.test(pin)) {
+                        break
+                    }
                     continue;
                 }
                 Jsoup.connect(recipeLink)
@@ -58,6 +61,9 @@ class ExtractRecipeToPDFTask(
             } catch (e: Exception) {
                 e.printStackTrace()
                 futures.add(pin);
+                if (!onProgress.test(pin)) {
+                    break
+                }
                 continue;
             }
             // Get all Links (<a>)
@@ -126,7 +132,7 @@ class ExtractRecipeToPDFTask(
             Log.d(TAG, "PDFLink: $pdfLink")
             pin.pdfLink = pdfLink
             // Show Progress and check if Scraping should be interrupted
-            if (pdfLink != null && !onProgress.test(pin)) {
+            if (!onProgress.test(pin)) {
                 break
             }
             futures.add(pin);

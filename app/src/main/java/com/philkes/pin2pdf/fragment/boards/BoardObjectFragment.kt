@@ -81,7 +81,7 @@ class BoardObjectFragment : Fragment() {
                     viewLifecycleOwner
                 ) { changedPins -> setChangedPins(changedPins) }
         }
-        if(initiallyFetchPins){
+        if (initiallyFetchPins) {
             fetchAllPins()
         }
 
@@ -117,11 +117,14 @@ class BoardObjectFragment : Fragment() {
 
     private var cancelScraping = false
 
+    private val notReachablePins = mutableListOf<PinModel>()
+
     fun isCancelScraping(): Boolean {
         return cancelScraping;
     }
 
     fun fetchAllPins() {
+        notReachablePins.clear()
         if (isFavoritesBoard) {
             return
         }
@@ -132,9 +135,9 @@ class BoardObjectFragment : Fragment() {
             setCancelable(false)
             setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", { i, a -> })
         }
+        lateinit var button: Button
         progress.setOnShowListener {
-            val button: Button =
-                (progress as ProgressDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
+            button = (progress as ProgressDialog).getButton(DialogInterface.BUTTON_NEGATIVE)
             button.setOnClickListener {
                 cancelScraping = true
                 progress.setMessage("Cancelling PDF Scraping...")
@@ -142,7 +145,7 @@ class BoardObjectFragment : Fragment() {
         }
         progress.show()
         pinterestAPI.requestPinsOfBoard(boardId) { pins: List<PinModel> ->
-            if(cancelScraping){
+            if (cancelScraping) {
                 progress.dismiss()
                 return@requestPinsOfBoard
             }
@@ -154,7 +157,7 @@ class BoardObjectFragment : Fragment() {
                     Log.d(TAG, "Loaded Pins: ${loadedPins.size}")
                     // Check if any Pins weren't loaded from local DB
                     val missingPins: List<PinModel> =
-                        ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { pinModel.pinId == it.pinId } }
+                        ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { (pinModel.pinId == it.pinId) } }
                     Log.d(TAG, "Missing Pins: ${missingPins.size}")
                     // Fetch missing Pins from Pinterest API/Scraper
                     if (missingPins.isNotEmpty()) {
@@ -169,8 +172,17 @@ class BoardObjectFragment : Fragment() {
                                 dbService.insertPins(listOf(updatedPin)) {
                                 }
                             })
+                            if (updatedPin.pdfLink == null) {
+                                notReachablePins.add(updatedPin)
+                            }
                             activity!!.runOnUiThread {
-                                progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${++pinCounter} of ${missingPins.size} Pins")
+                                var str =
+                                    "${getString(R.string.progress_pins_scraping)}\n${++pinCounter} of ${missingPins.size} Pins"
+                                if (notReachablePins.isNotEmpty()) {
+                                    str =
+                                        str.plus("\n${notReachablePins.size} Pins are not reachable, they will not be shown")
+                                }
+                                progress.setMessage(str)
                             }
                             return@scrapePDFLinks !isCancelScraping()
                         }
@@ -180,11 +192,12 @@ class BoardObjectFragment : Fragment() {
                             activity!!.runOnUiThread {
                                 progress.dismiss()
                             }
+
                         }
 
                     } else {
                         updatePinsList(loadedPins)
-                        allPins = loadedPins
+                        allPins = currentPins
                         activity!!.runOnUiThread {
                             progress.dismiss()
                         }
@@ -201,13 +214,14 @@ class BoardObjectFragment : Fragment() {
             changedPinModels = changedPins.map { it.toModel() }
         }
         updatePinsList(changedPinModels)
-        allPins = changedPinModels
+        allPins = currentPins
     }
 
     private fun updatePinsList(pins: List<PinModel>) {
+        val pinsWithPdfLink = pins.filter { it.pdfLink != null }
         with(currentPins) {
             clear()
-            addAll(pins)
+            addAll(pinsWithPdfLink)
         }
         activity!!.runOnUiThread {
             if (!boardId.equals(BoardFragment.PIN2PDF_FAVORITES_BOARD_ID)) {
