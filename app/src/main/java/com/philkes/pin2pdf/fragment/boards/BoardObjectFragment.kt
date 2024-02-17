@@ -197,7 +197,7 @@ class BoardObjectFragment : Fragment() {
 
                     } else {
                         updatePinsList(loadedPins)
-                        allPins = currentPins
+                        allPins = currentPins.toMutableList()
                         activity!!.runOnUiThread {
                             progress.dismiss()
                         }
@@ -214,7 +214,7 @@ class BoardObjectFragment : Fragment() {
             changedPinModels = changedPins.map { it.toModel() }
         }
         updatePinsList(changedPinModels)
-        allPins = currentPins
+        allPins = currentPins.toMutableList()
     }
 
     private fun updatePinsList(pins: List<PinModel>) {
