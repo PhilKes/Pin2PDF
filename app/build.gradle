@@ -10,7 +10,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "com.philkes.pin2pdf"
+        applicationId "io.github.philkes.pin2pdf"
         minSdkVersion 24
         targetSdkVersion 30
         versionCode 3

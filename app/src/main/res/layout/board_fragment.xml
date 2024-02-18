@@ -18,7 +18,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"></TextView>
 
-        <com.philkes.pin2pdf.fragment.boards.RecyclerViewEmptySupport
+        <io.github.philkes.pin2pdf.fragment.boards.RecyclerViewEmptySupport
             android:id="@+id/pins_list"
             android:layout_width="fill_parent"
             android:layout_height="0dp"
