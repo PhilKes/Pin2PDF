@@ -144,6 +144,10 @@ class BoardObjectFragment : Fragment() {
             }
         }
         progress.show()
+        refreshPins(progress)
+    }
+
+    private fun refreshPins(progress: ProgressDialog) {
         pinterestAPI.requestPinsOfBoard(boardId) { pins: List<PinModel> ->
             if (cancelScraping) {
                 progress.dismiss()
@@ -152,59 +156,65 @@ class BoardObjectFragment : Fragment() {
             Log.d(TAG, "All Pins: ${pins.size}")
             // Try to load all Pins from local DB
             // important: use Dispatchers.IO to not block the UI Thread
-            lifecycleScope.launch(Dispatchers.IO) {
-                dbService.loadPins(pins.map { obj: PinModel -> obj.pinId!! }) { loadedPins: List<PinModel> ->
-                    Log.d(TAG, "Loaded Pins: ${loadedPins.size}")
-                    // Check if any Pins weren't loaded from local DB
-                    val missingPins: List<PinModel> =
-                        ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { (pinModel.pinId == it.pinId) } }
-                    Log.d(TAG, "Missing Pins: ${missingPins.size}")
-                    // Fetch missing Pins from Pinterest API/Scraper
-                    if (missingPins.isNotEmpty()) {
-                        activity!!.runOnUiThread {
-                            progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${missingPins.size} Pins")
-                        }
-                        val insertJobs = mutableListOf<Job>()
-                        var pinCounter = 0;
-                        cancelScraping = false
-                        pinterestAPI.scrapePDFLinks(missingPins) { updatedPin ->
-                            insertJobs.add(lifecycleScope.launch(Dispatchers.IO) {
-                                dbService.insertPins(listOf(updatedPin)) {
-                                }
-                            })
-                            if (updatedPin.pdfLink == null) {
-                                notReachablePins.add(updatedPin)
-                            }
-                            activity!!.runOnUiThread {
-                                var str =
-                                    "${getString(R.string.progress_pins_scraping)}\n${++pinCounter} of ${missingPins.size} Pins"
-                                if (notReachablePins.isNotEmpty()) {
-                                    str =
-                                        str.plus("\n${notReachablePins.size} Pins are not reachable, they will not be shown")
-                                }
-                                progress.setMessage(str)
-                            }
-                            return@scrapePDFLinks !isCancelScraping()
-                        }
-                        cancelScraping = false
-                        lifecycleScope.launch {
-                            insertJobs.forEach { it.join() }
-                            activity!!.runOnUiThread {
-                                progress.dismiss()
-                            }
+            loadPins(pins, progress)
+        }
+    }
 
+    private fun loadPins(
+        pins: List<PinModel>,
+        progress: ProgressDialog
+    ) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            dbService.loadPins(pins.map { obj: PinModel -> obj.pinId!! }) { loadedPins: List<PinModel> ->
+                Log.d(TAG, "Loaded Pins: ${loadedPins.size}")
+                // Check if any Pins weren't loaded from local DB
+                val missingPins: List<PinModel> =
+                    ArrayList(pins).filter { pinModel: PinModel -> !loadedPins.any { (pinModel.pinId == it.pinId) } }
+                Log.d(TAG, "Missing Pins: ${missingPins.size}")
+                // Fetch missing Pins from Pinterest API/Scraper
+                if (missingPins.isNotEmpty()) {
+                    requireActivity().runOnUiThread {
+                        progress.setMessage("${getString(R.string.progress_pins_scraping)}\n${missingPins.size} Pins")
+                    }
+                    val insertJobs = mutableListOf<Job>()
+                    var pinCounter = 0;
+                    cancelScraping = false
+                    pinterestAPI.scrapePDFLinks(missingPins) { updatedPin ->
+                        insertJobs.add(lifecycleScope.launch(Dispatchers.IO) {
+                            dbService.insertPins(listOf(updatedPin)) {
+                            }
+                        })
+                        if (updatedPin.pdfLink == null) {
+                            notReachablePins.add(updatedPin)
                         }
-
-                    } else {
-                        updatePinsList(loadedPins)
-                        allPins = currentPins.toMutableList()
-                        activity!!.runOnUiThread {
+                        requireActivity().runOnUiThread {
+                            var str =
+                                "${getString(R.string.progress_pins_scraping)}\n${++pinCounter} of ${missingPins.size} Pins"
+                            if (notReachablePins.isNotEmpty()) {
+                                str =
+                                    str.plus("\n${notReachablePins.size} Pins are not reachable, they will not be shown")
+                            }
+                            progress.setMessage(str)
+                        }
+                        return@scrapePDFLinks !isCancelScraping()
+                    }
+                    cancelScraping = false
+                    lifecycleScope.launch {
+                        insertJobs.forEach { it.join() }
+                        requireActivity().runOnUiThread {
                             progress.dismiss()
                         }
+
+                    }
+
+                } else {
+                    updatePinsList(loadedPins)
+                    allPins = currentPins.toMutableList()
+                    requireActivity().runOnUiThread {
+                        progress.dismiss()
                     }
                 }
             }
-
         }
     }
 
@@ -223,7 +233,7 @@ class BoardObjectFragment : Fragment() {
             clear()
             addAll(pinsWithPdfLink)
         }
-        activity!!.runOnUiThread {
+        requireActivity().runOnUiThread {
             if (!boardId.equals(BoardFragment.PIN2PDF_FAVORITES_BOARD_ID)) {
                 amountPinsTextView.text =
                     String.format(getString(R.string.amount_pins_text_template), currentPins.size)

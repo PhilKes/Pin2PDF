@@ -6,6 +6,6 @@
             android:title="Change User and Boards"/>
     <item
             android:id="@+id/option_refresh_all_boards"
-            android:icon="@android:drawable/ic_menu_edit"
-            android:title="Refresh all Boards"/>
+            android:title="Refresh all Boards"
+        />
 </menu>

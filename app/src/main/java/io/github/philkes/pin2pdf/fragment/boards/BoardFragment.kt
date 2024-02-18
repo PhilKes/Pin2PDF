@@ -191,9 +191,6 @@ class BoardPagerAdapter(
             return searchFragment!!
         }
         val fragment = BoardObjectFragment()
-        if (position == initialItem) {
-            fragment.initiallyFetchPins = true
-        }
         val args = Bundle().apply {
             boards[position].let {
                 putString(BoardObjectFragment.ARG_BOARD, it.name)
