@@ -13,8 +13,8 @@ android {
         applicationId "io.github.philkes.pin2pdf"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 3
-        versionName "2.1"
+        versionCode 4
+        versionName "2.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
