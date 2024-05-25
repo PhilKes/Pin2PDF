@@ -99,7 +99,7 @@ class SearchObjectFragment : Fragment() {
         notReachablePins.clear()
         Log.d(TAG, "Fetch pins of search")
         val progress = ProgressDialog(context).apply {
-            setTitle(String.format(getString(R.string.progress_pins_title), query))
+            setTitle(getString(R.string.progress_pins_title))
             setMessage(getString(R.string.progress_pins_wait))
             setCancelable(false)
             setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", { i, a -> })
@@ -116,28 +116,27 @@ class SearchObjectFragment : Fragment() {
         lifecycleScope.launch(Dispatchers.IO) {
             dbService.loadAllPins { loadedPins: List<PinModel> ->
                 Log.d(TAG, "Loaded Pins: ${loadedPins.size}")
-                updatePinsList(loadedPins)
+                updatePinsList(loadedPins, false)
                 allPins = currentPins.toMutableList()
-                activity!!.runOnUiThread {
+                requireActivity().runOnUiThread {
                     progress.dismiss()
                 }
             }
         }
     }
 
-    public fun updateQuery(query: String) {
+    fun updateQuery(query: String) {
         this.query = query
         updatePinsList(allPins)
     }
 
-    private fun updatePinsList(pins: List<PinModel>) {
-
+    private fun updatePinsList(pins: List<PinModel>, filter: Boolean = true) {
         val pinsWithPdfLink = pins.filter { it.pdfLink != null }
         with(currentPins) {
             clear()
-            addAll(pinsWithPdfLink.filter {
-                it.title!!.lowercase().contains(query!!.lowercase())
-            }.toMutableList())
+            addAll(if (filter) pinsWithPdfLink.filter {
+                it.title!!.lowercase().contains(query.lowercase())
+            }.toMutableList() else pinsWithPdfLink.toMutableList())
         }
         requireActivity().runOnUiThread {
             amountPinsTextView.text = "Results: " + currentPins.size

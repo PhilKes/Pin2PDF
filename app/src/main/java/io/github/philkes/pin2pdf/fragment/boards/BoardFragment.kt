@@ -10,6 +10,7 @@ import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuItemCompat
 import androidx.fragment.app.Fragment
@@ -17,11 +18,11 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 import io.github.philkes.pin2pdf.R
 import io.github.philkes.pin2pdf.Settings
 import io.github.philkes.pin2pdf.api.pinterest.PinterestAPI
 import io.github.philkes.pin2pdf.api.pinterest.model.BoardResponse
-import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 
@@ -39,8 +40,8 @@ class BoardFragment : Fragment() {
     var boardCollectionAdapter: BoardPagerAdapter? = null
     lateinit var tabLayout: TabLayout
     lateinit var viewPager: ViewPager2
-
-    var isSearchActive: Boolean = false
+    lateinit var searchView: SearchView
+    private var lastSelectedTab = -1
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,6 +71,23 @@ class BoardFragment : Fragment() {
 
             }
         })
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (isSearchActive()) {
+                        toggleSearchTabVisibility(false)
+                        searchView.setQuery("", false)
+                        searchView.isIconified = true
+                        searchView.clearFocus()
+                    } else if (parentFragmentManager.backStackEntryCount > 0) {
+                        parentFragmentManager.popBackStack()
+                    } else {
+                        // No more fragments in the back stack, perform default back press action
+                        requireActivity().onBackPressed()
+                    }
+                }
+            })
     }
 
     fun loadBoards(newBoards: List<BoardResponse>) {
@@ -118,8 +136,10 @@ class BoardFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.search_bar, menu)
         val searchViewItem = menu.findItem(R.id.app_bar_search)
-        val searchView = MenuItemCompat.getActionView(searchViewItem) as SearchView
-
+        searchView = MenuItemCompat.getActionView(searchViewItem) as SearchView
+        searchView.setOnSearchClickListener {
+            toggleSearchTabVisibility(true)
+        }
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchView.clearFocus()
@@ -127,30 +147,35 @@ class BoardFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                val boards = boardCollectionAdapter!!.boardFragments.size
-                val newIsSearchActive = newText.isNotEmpty()
-                if (!isSearchActive && newIsSearchActive) {
-                    toggleSearchTabVisibility(true, boards)
-                } else if (isSearchActive && !newIsSearchActive) {
-                    toggleSearchTabVisibility(false, boards)
-                }
                 boardCollectionAdapter!!.setSearchQuery(newText)
-                isSearchActive = newIsSearchActive;
                 return false
             }
 
-            private fun toggleSearchTabVisibility(searchActive: Boolean, boards: Int) {
-                val searchTab = tabLayout.getTabAt(boards)!!
-                (searchTab.view as LinearLayout).visibility =
-                    if (searchActive) View.VISIBLE else View.GONE
-                searchTab.select()
-                for (i in 0 until boards) {
-                    (tabLayout.getTabAt(i)!!.view as LinearLayout).visibility =
-                        if (searchActive) View.GONE else View.VISIBLE
-                }
-            }
+
         })
+        searchView.setOnCloseListener {
+            toggleSearchTabVisibility(false)
+            false
+        }
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun isSearchActive() =
+        tabLayout.getTabAt(boardCollectionAdapter!!.boardFragments.size)!!.isSelected
+
+    private fun toggleSearchTabVisibility(searchActive: Boolean) {
+        val boards = boardCollectionAdapter!!.boardFragments.size
+        val searchTab = tabLayout.getTabAt(boards)!!
+        (searchTab.view as LinearLayout).visibility = if (searchActive) View.VISIBLE else View.GONE
+        if (searchActive) {
+            lastSelectedTab = tabLayout.selectedTabPosition
+            searchTab.select()
+        }
+        for (i in 0 until boards) {
+            (tabLayout.getTabAt(i)!!.view as LinearLayout).visibility =
+                if (searchActive) View.GONE else View.VISIBLE
+        }
+        if (!searchActive) tabLayout.getTabAt(lastSelectedTab)!!.select()
     }
 
     companion object {
