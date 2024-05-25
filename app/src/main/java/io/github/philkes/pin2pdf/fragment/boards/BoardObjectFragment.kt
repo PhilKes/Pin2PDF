@@ -242,6 +242,7 @@ class BoardObjectFragment : Fragment() {
             }
 
             pinListViewAdapter.notifyDataSetChanged()
+            pinListView.scrollToPosition(0)
         }
     }
 

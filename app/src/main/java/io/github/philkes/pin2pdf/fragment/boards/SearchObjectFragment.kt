@@ -142,6 +142,8 @@ class SearchObjectFragment : Fragment() {
         requireActivity().runOnUiThread {
             amountPinsTextView.text = "Results: " + currentPins.size
             pinListViewAdapter.notifyDataSetChanged()
+            pinListView.scrollTo(0, 0)
+            (pinListView.layoutManager!! as LinearLayoutManager).scrollToPositionWithOffset(0, 0)
         }
     }
 
