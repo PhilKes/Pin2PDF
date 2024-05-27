@@ -2,6 +2,7 @@ package io.github.philkes.pin2pdf.storage.database
 
 import androidx.lifecycle.LiveData
 import io.github.philkes.pin2pdf.fragment.boards.PinModel
+import io.github.philkes.pin2pdf.fragment.boards.PinModel.Companion.escapeForDB
 import java.util.function.Consumer
 
 /**
@@ -15,7 +16,7 @@ class DBService constructor(private val pinDao: PinDao) {
     }
 
     fun loadPinsOfBoard(board: String): LiveData<List<Pin>> {
-        return pinDao.loadAllPinsOfBoard(board)
+        return pinDao.loadAllPinsOfBoard(escapeForDB(board))
     }
 
     suspend fun loadAllPins(onSuccess: Consumer<List<PinModel>>?) {

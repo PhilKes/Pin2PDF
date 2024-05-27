@@ -19,9 +19,7 @@ class PinModel(
     var pdfLink: String? = null
     var board: String? = null
         set(board) {
-            field = StringEscapeUtils.unescapeHtml3(board)
-                .replace("/", "")
-                .replace(" ", "-")
+            field = escapeForDB(board)
         }
     var note: String? = null
     var isFavorite: Boolean = false
@@ -34,5 +32,11 @@ class PinModel(
         board = mBoard
         note = mNote
         isFavorite = mIsFavorite
+    }
+
+    companion object {
+        fun escapeForDB(board: String?) = StringEscapeUtils.unescapeHtml3(board)
+            .replace("/", "")
+            .replace(" ", "-")
     }
 }
