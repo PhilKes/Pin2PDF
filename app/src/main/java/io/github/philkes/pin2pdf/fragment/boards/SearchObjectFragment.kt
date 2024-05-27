@@ -17,12 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.github.philkes.pin2pdf.R
 import io.github.philkes.pin2pdf.Settings
-import io.github.philkes.pin2pdf.api.pinterest.PinterestAPI
 import io.github.philkes.pin2pdf.storage.database.DBService
-import io.github.philkes.pin2pdf.storage.database.Pin
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -63,7 +60,7 @@ class SearchObjectFragment : Fragment() {
 //            .observe(
 //                viewLifecycleOwner
 //            ) { changedPins -> setChangedPins(changedPins) }
-        fetchAllPins()
+//        fetchAllPins()
         (pinListView.layoutManager as LinearLayoutManager).stackFromEnd = true
     }
 
@@ -81,7 +78,7 @@ class SearchObjectFragment : Fragment() {
         }
         refreshLayout = view.findViewById<SwipeRefreshLayout?>(R.id.refresh_layout).apply {
             setOnRefreshListener {
-                fetchAllPins()
+                loadStoredPins()
                 isRefreshing = false
             }
         }
@@ -95,11 +92,16 @@ class SearchObjectFragment : Fragment() {
         return cancelScraping;
     }
 
-    fun fetchAllPins() {
+    fun loadAllPinsIfEmpty() {
+        if(allPins.isEmpty()){
+            loadStoredPins()
+        }
+    }
+    fun loadStoredPins() {
         notReachablePins.clear()
         Log.d(TAG, "Fetch pins of search")
         val progress = ProgressDialog(context).apply {
-            setTitle(getString(R.string.progress_pins_title))
+            setTitle(getString(R.string.progress_search_pins_title))
             setMessage(getString(R.string.progress_pins_wait))
             setCancelable(false)
             setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", { i, a -> })

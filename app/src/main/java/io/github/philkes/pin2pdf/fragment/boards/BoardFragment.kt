@@ -65,7 +65,7 @@ class BoardFragment : Fragment() {
                 super.onPageSelected(position)
                 with(boardCollectionAdapter) {
                     if (this != null && position < boardFragments.size && boardFragments[position] != null) {
-                        boardFragments[position]!!.checkPins()
+                        boardFragments[position]!!.loadStoredPinsIfEmpty()
                     }
                 }
 
@@ -138,6 +138,7 @@ class BoardFragment : Fragment() {
         val searchViewItem = menu.findItem(R.id.app_bar_search)
         searchView = MenuItemCompat.getActionView(searchViewItem) as SearchView
         searchView.setOnSearchClickListener {
+            boardCollectionAdapter?.searchFragment?.loadAllPinsIfEmpty()
             toggleSearchTabVisibility(true)
         }
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {

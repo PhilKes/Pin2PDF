@@ -76,15 +76,16 @@ class BoardObjectFragment : Fragment() {
                 viewLifecycleOwner
             ) { changedPins -> setChangedPins(changedPins) }
         } else {
-            dbService.loadPinsOfBoard(boardName!!)
-                .observe(
-                    viewLifecycleOwner
-                ) { changedPins -> setChangedPins(changedPins) }
-        }
-        if (initiallyFetchPins) {
-            fetchAllPins()
+            loadStoredPins()
         }
         (pinListView.layoutManager as LinearLayoutManager).stackFromEnd = true
+    }
+
+    private fun loadStoredPins() {
+        dbService.loadPinsOfBoard(boardName!!)
+            .observe(
+                viewLifecycleOwner
+            ) { changedPins -> setChangedPins(changedPins) }
     }
 
     private fun setupUI(view: View) {
@@ -259,9 +260,9 @@ class BoardObjectFragment : Fragment() {
         updatePinsList(filteredPins)
     }
 
-    fun checkPins() {
+    fun loadStoredPinsIfEmpty() {
         if (allPins.isEmpty()) {
-            fetchAllPins()
+            loadStoredPins()
         }
     }
 
